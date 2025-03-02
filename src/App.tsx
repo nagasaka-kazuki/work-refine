@@ -46,9 +46,7 @@ export default function Home() {
 
   return (
     <main className="container max-w-lg mx-auto p-4">
-      <h1 className="text-xl font-bold mb-3 text-center">
-        タスクチェックリスト
-      </h1>
+      <h1 className="text-xl font-bold mb-3 text-center">タスクチェッカー</h1>
 
       {taskCategories.length > 0 ? (
         <Accordion
