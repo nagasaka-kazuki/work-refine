@@ -1,6 +1,7 @@
 import { PlusCircle, Trash2, Upload, Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Toaster } from '@/components/ui/sonner'
 import {
   Accordion,
   AccordionContent,
@@ -27,6 +28,7 @@ export default function Home() {
     addChecklistItem,
     addTaskCategory,
     deleteChecklistItem,
+    resetCheckInTask,
     deleteTaskCategory,
     deletingCategory,
     handleAccordionValueChange,
@@ -72,6 +74,16 @@ export default function Home() {
               </div>
               <AccordionContent>
                 <div className="px-1">
+                  <div className="flex justify-end">
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="text-gray-400 text-xs px-0 pt-1"
+                      onClick={() => resetCheckInTask(category.id)}
+                    >
+                      チェックをリセットする
+                    </Button>
+                  </div>
                   <DNDSortableArea
                     itemKeys={category.items.map((item) => item.id)}
                     handleDragEnd={(activeDraggingItem, overItem) =>
@@ -94,7 +106,7 @@ export default function Home() {
 
                   <InputForm
                     onAdd={(title) => addChecklistItem(category.id, title)}
-                    placeholder="新しいアイテムを追加"
+                    placeholder="チェック項目名"
                   />
                 </div>
               </AccordionContent>
@@ -168,6 +180,7 @@ export default function Home() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <Toaster position="top-center" />
     </main>
   )
 }

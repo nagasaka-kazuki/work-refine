@@ -4,6 +4,7 @@ import type { TaskCategory, ChecklistItem } from '@/lib/types'
 import { useLocalStorage } from './use-local-storage'
 import { arrayMove } from '@dnd-kit/sortable'
 import { saveAs } from 'file-saver'
+import { toast } from 'sonner'
 
 export function useTaskCategories() {
   const [taskCategories, setTaskCategories] = useLocalStorage<TaskCategory[]>(
@@ -16,16 +17,41 @@ export function useTaskCategories() {
   )
 
   const toggleChecklistItem = (categoryId: string, itemId: string) => {
+    setTaskCategories((prev) => {
+      const newCategories = prev.map((category) => {
+        if (category.id === categoryId) {
+          const updatedItems = category.items.map((item) =>
+            item.id === itemId ? { ...item, completed: !item.completed } : item
+          )
+
+          const allCompleted = updatedItems.every((item) => item.completed)
+
+          if (allCompleted) {
+            toast.success('おめでとう！すべてのタスクが完了しました 🎉')
+          }
+
+          return {
+            ...category,
+            items: updatedItems,
+          }
+        }
+        return category
+      })
+
+      return newCategories
+    })
+  }
+
+  const resetCheckInTask = (categoryId: string) => {
     setTaskCategories((prev) =>
       prev.map((category) => {
         if (category.id === categoryId) {
           return {
             ...category,
-            items: category.items.map((item) =>
-              item.id === itemId
-                ? { ...item, completed: !item.completed }
-                : item
-            ),
+            items: category.items.map((item) => ({
+              ...item,
+              completed: false,
+            })),
           }
         }
         return category
@@ -163,13 +189,16 @@ export function useTaskCategories() {
         ]
       })
     } catch (error) {
-      console.error('ファイルの読み込みに失敗しました:', error)
+      toast.error(
+        'ファイルの読み込みに失敗しました。データの形式が間違っているようです。。。'
+      )
     }
   }
 
   return {
     taskCategories,
     setTaskCategories,
+    resetCheckInTask,
     isAddingCategory,
     deletingCategory,
     setIsAddingCategory,
