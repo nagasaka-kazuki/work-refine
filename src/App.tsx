@@ -18,11 +18,10 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { ChecklistItemComponent } from '@/components/checklist-item'
-import { AddTaskCategoryForm } from '@/components/add-task-category-form'
-import { AddChecklistItemForm } from './components/add-checklist-form'
 import { useTaskCategories } from './hooks/use-task-categories'
 import { useTaskCategoryFileOperations } from './hooks/use-task-category-file-operations'
 import { DNDSortableArea } from './components/dnd-sortable-area'
+import { InputForm } from './components/input-form'
 
 export default function Home() {
   const {
@@ -45,13 +44,12 @@ export default function Home() {
     useTaskCategoryFileOperations(taskCategories, setTaskCategories)
 
   return (
-    <main className="container max-w-lg mx-auto p-4">
-      <h1 className="text-xl font-bold mb-3 text-center">タスクチェッカー</h1>
+    <main className="container max-w-lg mx-auto p-4 grid gap-8">
+      <h1 className="text-xl font-bold text-center">タスクチェッカー</h1>
 
       {taskCategories.length > 0 ? (
         <Accordion
           type="multiple"
-          className="mb-8"
           onValueChange={(value) => handleAccordionValueChange(value)}
           value={taskCategories
             .filter((category) => category.isOpen)
@@ -97,8 +95,9 @@ export default function Home() {
                     ))}
                   </DNDSortableArea>
 
-                  <AddChecklistItemForm
+                  <InputForm
                     onAdd={(title) => addChecklistItem(category.id, title)}
+                    placeholder="新しいアイテムを追加"
                   />
                 </div>
               </AccordionContent>
@@ -106,15 +105,18 @@ export default function Home() {
           ))}
         </Accordion>
       ) : (
-        <div className="text-center text-muted-foreground mb-8">
+        <div className="text-center text-muted-foreground">
           タスクがありません。下のボタンから追加してください。
         </div>
       )}
 
       {isAddingCategory ? (
-        <AddTaskCategoryForm
+        <InputForm
           onAdd={addTaskCategory}
           onCancel={() => setIsAddingCategory(false)}
+          placeholder="タスク名"
+          showCancelButton={true}
+          autoFocus={true}
         />
       ) : (
         <div>
@@ -123,7 +125,7 @@ export default function Home() {
             <span>新しいタスクを追加</span>
           </Button>
 
-          <div className="w-full flex items-center gap-2 justify-end mt-2">
+          <div className="w-full flex items-center gap-2 justify-end mt-4">
             <Button className="p-0">
               <label className="flex items-center gap-2 w-full px-3 py-2">
                 <Download className="h-5 w-5" />
