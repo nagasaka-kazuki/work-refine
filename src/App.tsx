@@ -17,9 +17,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { ChecklistItemComponent } from '@/components/checklist-item'
+import { CheckBoxSortableItem } from '@/components/checkbox-sortable-item'
 import { useTaskCategories } from './hooks/use-task-categories'
-import { useTaskCategoryFileOperations } from './hooks/use-task-category-file-operations'
 import { DNDSortableArea } from './components/dnd-sortable-area'
 import { InputForm } from './components/input-form'
 
@@ -35,13 +34,11 @@ export default function Home() {
     isAddingCategory,
     setDeletingCategory,
     setIsAddingCategory,
-    setTaskCategories,
     taskCategories,
     toggleChecklistItem,
+    exportTasksToJsonFile,
+    importTasksFileData,
   } = useTaskCategories()
-
-  const { exportJsonData, importTaskCategoryData } =
-    useTaskCategoryFileOperations(taskCategories, setTaskCategories)
 
   return (
     <main className="container max-w-lg mx-auto p-4 grid gap-8">
@@ -82,7 +79,7 @@ export default function Home() {
                     }
                   >
                     {category.items.map((item) => (
-                      <ChecklistItemComponent
+                      <CheckBoxSortableItem
                         key={item.id}
                         item={item}
                         onToggle={() =>
@@ -133,13 +130,13 @@ export default function Home() {
                 <Input
                   type="file"
                   accept=".json"
-                  onChange={importTaskCategoryData}
+                  onChange={importTasksFileData}
                   className="hidden"
                 />
               </label>
             </Button>
 
-            <Button onClick={exportJsonData}>
+            <Button onClick={exportTasksToJsonFile}>
               <Upload className="h-5 w-5" />
               エクスポート
             </Button>

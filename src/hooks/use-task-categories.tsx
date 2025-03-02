@@ -3,6 +3,7 @@ import { v4 } from 'uuid'
 import type { TaskCategory, ChecklistItem } from '@/lib/types'
 import { useLocalStorage } from './use-local-storage'
 import { arrayMove } from '@dnd-kit/sortable'
+import { saveAs } from 'file-saver'
 
 export function useTaskCategories() {
   const [taskCategories, setTaskCategories] = useLocalStorage<TaskCategory[]>(
@@ -128,6 +129,44 @@ export function useTaskCategories() {
     }
   }
 
+  const exportTasksToJsonFile = () => {
+    saveAs(
+      new Blob(
+        [
+          JSON.stringify(
+            taskCategories.map((c) => ({ ...c, isOpen: false })),
+            null,
+            2
+          ),
+        ],
+        { type: 'application/json' }
+      ),
+      'taskData.json'
+    )
+  }
+
+  const importTasksFileData = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    try {
+      const text = await file.text()
+      const importedData: TaskCategory[] = JSON.parse(text)
+
+      setTaskCategories((prev) => {
+        const existingIds = new Set(prev.map((category) => category.id))
+        return [
+          ...prev,
+          ...importedData.filter((category) => !existingIds.has(category.id)),
+        ]
+      })
+    } catch (error) {
+      console.error('ファイルの読み込みに失敗しました:', error)
+    }
+  }
+
   return {
     taskCategories,
     setTaskCategories,
@@ -142,5 +181,7 @@ export function useTaskCategories() {
     deleteTaskCategory,
     handleAccordionValueChange,
     handleDragEnd,
+    exportTasksToJsonFile,
+    importTasksFileData,
   }
 }
