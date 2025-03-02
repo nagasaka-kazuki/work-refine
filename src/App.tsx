@@ -74,8 +74,7 @@ export default function Home() {
                   }}
                   className="text-destructive hover:text-destructive"
                 >
-                  <Trash2 className="h-4 w-4" />
-                  <span className="sr-only">削除</span>
+                  <Trash2 className="h-4 w-4" aria-label='削除'/>
                 </Button>
               </div>
               <AccordionContent>
