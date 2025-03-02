@@ -14,7 +14,6 @@ export function useTaskCategories() {
     null
   )
 
-  // チェックボックスの状態を変更
   const toggleChecklistItem = (categoryId: string, itemId: string) => {
     setTaskCategories((prev) =>
       prev.map((category) => {
@@ -33,7 +32,6 @@ export function useTaskCategories() {
     )
   }
 
-  // チェックリストアイテムを削除
   const deleteChecklistItem = (categoryId: string, itemId: string) => {
     setTaskCategories((prev) =>
       prev.map((category) => {
@@ -48,7 +46,6 @@ export function useTaskCategories() {
     )
   }
 
-  // 新しいチェックリストアイテムを追加
   const addChecklistItem = (categoryId: string, title: string) => {
     if (title.trim()) {
       const newItem: ChecklistItem = {
@@ -71,7 +68,6 @@ export function useTaskCategories() {
     }
   }
 
-  // 新しいタスクカテゴリを追加
   const addTaskCategory = (name: string) => {
     if (name.trim()) {
       const newCategory: TaskCategory = {
@@ -86,7 +82,6 @@ export function useTaskCategories() {
     }
   }
 
-  // タスクカテゴリを削除
   const deleteTaskCategory = (categoryId: string) => {
     setTaskCategories((prev) =>
       prev.filter((category) => category.id !== categoryId)
@@ -94,7 +89,6 @@ export function useTaskCategories() {
     setDeletingCategory(null)
   }
 
-  // アコーディオンの開閉状態を管理
   const handleAccordionValueChange = (value: string[]) => {
     setTaskCategories((prev) =>
       prev.map((category) => ({
@@ -104,7 +98,6 @@ export function useTaskCategories() {
     )
   }
 
-  // ドラッグ終了時の処理
   const handleDragEnd = (
     draggedItemId: string,
     overedItemId: string | undefined,
