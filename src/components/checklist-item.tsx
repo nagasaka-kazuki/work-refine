@@ -28,15 +28,15 @@ export function ChecklistItemComponent({
   return (
     <div
       style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={`flex items-center justify-between rounded-md touch-none transform ${
+      className={`flex items-center justify-between rounded-md ${
         item.completed ? 'bg-muted' : 'bg-card'
       } ${isDragging ? 'shadow-lg z-10 opacity-50 relative' : ''}`}
       ref={setNodeRef}
-      {...attributes}
-      {...listeners}
     >
       <div className="flex items-center gap-2 px-1">
-        <GripVertical className="h-4 w-4 text-muted-foreground" />
+        <div className="touch-none cursor-grab" {...attributes} {...listeners}>
+          <GripVertical className="h-4 w-4 text-muted-foreground" />
+        </div>
         <Checkbox
           id={`item-${item.id}`}
           checked={item.completed}
