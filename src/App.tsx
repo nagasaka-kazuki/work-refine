@@ -180,7 +180,7 @@ export default function Home() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      <Toaster position="top-center" />
+      <Toaster position="top-center" richColors />
     </main>
   )
 }
