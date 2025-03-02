@@ -27,7 +27,7 @@ export function useTaskCategories() {
           const allCompleted = updatedItems.every((item) => item.completed)
 
           if (allCompleted) {
-            toast.success('おめでとう！すべてのタスクが完了しました 🎉')
+            toast.success('おめでとう！すべてのチェック項目を達成しました 🎉')
           }
 
           return {
@@ -190,7 +190,7 @@ export function useTaskCategories() {
       })
     } catch (error) {
       toast.error(
-        'ファイルの読み込みに失敗しました。データの形式が間違っているようです。。。'
+        'ファイルの読み込みに失敗しました。データの形式が間違っているようです😭'
       )
     }
   }
