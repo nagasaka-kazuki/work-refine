@@ -18,7 +18,7 @@ export function AddChecklistItemForm({ onAdd }: AddChecklistItemFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex items-center gap-2 mt-4">
+    <form onSubmit={handleSubmit} className="flex items-center gap-2 pt-2">
       <Input
         placeholder="新しいアイテムを追加"
         value={title}

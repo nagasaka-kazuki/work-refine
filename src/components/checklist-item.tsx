@@ -28,9 +28,7 @@ export function ChecklistItemComponent({
   return (
     <div
       style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={`flex items-center justify-between rounded-md ${
-        item.completed ? 'bg-muted' : 'bg-card'
-      } ${isDragging ? 'shadow-lg z-10 opacity-50 relative' : ''}`}
+      className={`flex items-center justify-between rounded-md  ${isDragging ? 'shadow-lg z-10 opacity-50 relative' : ''}`}
       ref={setNodeRef}
     >
       <div className="flex items-center gap-2 px-1">

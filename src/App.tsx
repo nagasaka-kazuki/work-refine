@@ -78,7 +78,7 @@ export default function Home() {
                 </Button>
               </div>
               <AccordionContent>
-                <div className="space-y-2 mt-2 px-1">
+                <div className="px-1">
                   <DNDSortableArea
                     itemKeys={category.items.map((item) => item.id)}
                     handleDragEnd={(activeDraggingItem, overItem) =>
