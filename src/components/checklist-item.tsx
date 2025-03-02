@@ -57,7 +57,7 @@ export function ChecklistItemComponent({
           onClick={onDelete}
           className="h-8 w-8 text-destructive hover:text-destructive"
         >
-          <Trash2 className="h-4 w-4" aria-label='削除'/>
+          <Trash2 className="h-4 w-4" aria-label="削除" />
         </Button>
       </div>
     </div>

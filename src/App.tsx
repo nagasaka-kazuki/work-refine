@@ -18,7 +18,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { ChecklistItemComponent } from '@/components/checklist-item'
-import { AddTaskCategoryForm } from '@/components/add-task-category'
+import { AddTaskCategoryForm } from '@/components/add-task-category-form'
 import { AddChecklistItemForm } from './components/add-checklist-form'
 import { useTaskCategories } from './hooks/use-task-categories'
 import { useTaskCategoryFileOperations } from './hooks/use-task-category-file-operations'
@@ -74,7 +74,7 @@ export default function Home() {
                   }}
                   className="text-destructive hover:text-destructive"
                 >
-                  <Trash2 className="h-4 w-4" aria-label='削除'/>
+                  <Trash2 className="h-4 w-4" aria-label="削除" />
                 </Button>
               </div>
               <AccordionContent>
