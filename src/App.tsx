@@ -17,7 +17,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { CheckBoxSortableItem } from '@/components/checkbox-sortable-item'
+import { CheckboxSortableItem } from '@/components/checkbox-sortable-item'
 import { useTaskCategories } from './hooks/use-task-categories'
 import { DNDSortableArea } from './components/dnd-sortable-area'
 import { InputForm } from './components/input-form'
@@ -79,7 +79,7 @@ export default function Home() {
                     }
                   >
                     {category.items.map((item) => (
-                      <CheckBoxSortableItem
+                      <CheckboxSortableItem
                         key={item.id}
                         item={item}
                         onToggle={() =>

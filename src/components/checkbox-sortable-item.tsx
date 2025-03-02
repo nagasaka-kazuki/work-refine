@@ -11,7 +11,7 @@ interface ChecklistItemProps {
   onDelete: () => void
 }
 
-export function CheckBoxSortableItem({
+export function CheckboxSortableItem({
   item,
   onToggle,
   onDelete,
