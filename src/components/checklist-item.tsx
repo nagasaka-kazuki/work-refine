@@ -34,7 +34,11 @@ export function ChecklistItemComponent({
       ref={setNodeRef}
     >
       <div className="flex items-center gap-2 px-1">
-        <div className="touch-none cursor-grab" {...attributes} {...listeners}>
+        <div
+          className={`touch-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'} `}
+          {...attributes}
+          {...listeners}
+        >
           <GripVertical className="h-4 w-4 text-muted-foreground" />
         </div>
         <Checkbox
