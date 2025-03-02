@@ -16,7 +16,7 @@ export type DNDSortableAreaProps = {
   itemKeys: UniqueIdentifier[]
   handleDragEnd: (
     draggedItemId: string,
-    overedtemId: string | undefined
+    overedItemId: string | undefined
   ) => void
 }
 

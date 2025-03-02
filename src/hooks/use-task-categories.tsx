@@ -107,12 +107,12 @@ export function useTaskCategories() {
   // ドラッグ終了時の処理
   const handleDragEnd = (
     draggedItemId: string,
-    overedtemId: string | undefined,
+    overedItemId: string | undefined,
     categoryId: string
   ) => {
-    if (!overedtemId) return
+    if (!overedItemId) return
 
-    if (draggedItemId !== overedtemId) {
+    if (draggedItemId !== overedItemId) {
       const category = taskCategories.find(
         (category) => category.id === categoryId
       )
@@ -122,7 +122,7 @@ export function useTaskCategories() {
         (item) => item.id === draggedItemId
       )
       const newIndex = category.items.findIndex(
-        (item) => item.id === overedtemId
+        (item) => item.id === overedItemId
       )
 
       const newItems = arrayMove(category.items, oldIndex, newIndex)
