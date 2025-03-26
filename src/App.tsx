@@ -135,7 +135,7 @@ export default function Home() {
           </Button>
 
           <div className="w-full flex items-center gap-2 justify-end mt-4">
-            <Button className="p-0">
+            <Button className="p-0" variant="secondary">
               <label className="flex items-center gap-2 w-full px-3 py-2">
                 <Download className="h-5 w-5" />
                 インポート
@@ -148,7 +148,7 @@ export default function Home() {
               </label>
             </Button>
 
-            <Button onClick={exportTasksToJsonFile}>
+            <Button onClick={exportTasksToJsonFile} variant="secondary">
               <Upload className="h-5 w-5" />
               エクスポート
             </Button>
