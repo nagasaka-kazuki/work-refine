@@ -77,7 +77,7 @@ export default function Home() {
                     <Button
                       variant="link"
                       size="sm"
-                      className="text-gray-400 text-xs px-0 pt-1"
+                      className="text-gray-400 text-xs mt-1"
                       onClick={() => resetCheckInTask(category.id)}
                     >
                       チェックをリセットする
