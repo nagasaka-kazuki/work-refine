@@ -67,7 +67,6 @@ export default function Home() {
                     e.stopPropagation()
                     setDeletingCategory(category)
                   }}
-                  className="text-destructive hover:text-destructive"
                 >
                   <Trash2 className="h-4 w-4" aria-label="削除" />
                 </Button>

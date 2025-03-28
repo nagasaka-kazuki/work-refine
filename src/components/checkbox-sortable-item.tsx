@@ -57,7 +57,7 @@ export function CheckboxSortableItem({
           variant="ghost"
           size="icon"
           onClick={onDelete}
-          className="h-8 w-8 text-destructive hover:text-destructive"
+          className="h-8 w-8"
         >
           <Trash2 className="h-4 w-4" aria-label="削除" />
         </Button>
