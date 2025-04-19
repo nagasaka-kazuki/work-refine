@@ -12,7 +12,7 @@ export default defineConfig({
     },
   },
   base: '/work-refine/',
-    optimizeDeps: {
+  optimizeDeps: {
     exclude: ['@electric-sql/pglite'],
   },
 })
