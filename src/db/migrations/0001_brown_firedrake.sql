@@ -1,0 +1,1 @@
+ALTER TABLE "task_checks" ADD COLUMN "sort_position" integer NOT NULL;
