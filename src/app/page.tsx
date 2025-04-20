@@ -1,13 +1,15 @@
-import { useState, useEffect } from 'react'
-import { TaskList } from '@/components/task-list'
-import { Sidebar } from '@/components/sidebar'
-import { TopBar } from '@/components/top-bar'
-import { CategoryModal } from '@/components/category-modal'
-import { TaskModal } from '@/components/task-modal'
-import { categories, tasks, check_items, task_checks } from '@/db/schema'
-import { eq } from 'drizzle-orm'
-import { v4 as uuidv4 } from 'uuid'
-import { db, pgClient } from '@/lib/db-client'
+"use client"
+
+import { useState, useEffect } from "react"
+import { TaskList } from "@/components/task-list"
+import { Sidebar } from "@/components/sidebar"
+import { TopBar } from "@/components/top-bar"
+import { CategoryModal } from "@/components/category-modal"
+import { TaskModal } from "@/components/task-modal"
+import { categories, tasks, check_items, task_checks } from "@/db/schema"
+import { eq } from "drizzle-orm"
+import { v4 as uuidv4 } from "uuid"
+import { db, pgClient } from "@/lib/db-client"
 
 type Props = {
   categoriesData: (typeof categories.$inferSelect)[]
@@ -16,29 +18,16 @@ type Props = {
   taskChecksData: (typeof task_checks.$inferSelect)[]
 }
 
-export function Home({
-  categoriesData,
-  tasksData,
-  checkItemsData,
-  taskChecksData,
-}: Props) {
+export default function Home({ categoriesData, tasksData, checkItemsData, taskChecksData }: Props) {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
-  const [sortBy, setSortBy] = useState<'due_to' | 'status' | 'created_at'>(
-    'due_to'
-  )
+  const [sortBy, setSortBy] = useState<"due_to" | "status" | "created_at">("due_to")
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false)
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
-  const [editingCategory, setEditingCategory] = useState<
-    typeof categories.$inferSelect | null
-  >(null)
-  const [allCategories, setAllCategories] =
-    useState<(typeof categories.$inferSelect)[]>(categoriesData)
-  const [allTasks, setAllTasks] =
-    useState<(typeof tasks.$inferSelect)[]>(tasksData)
-  const [allCheckItems, setAllCheckItems] =
-    useState<(typeof check_items.$inferSelect)[]>(checkItemsData)
-  const [allTaskChecks, setAllTaskChecks] =
-    useState<(typeof task_checks.$inferSelect)[]>(taskChecksData)
+  const [editingCategory, setEditingCategory] = useState<typeof categories.$inferSelect | null>(null)
+  const [allCategories, setAllCategories] = useState<(typeof categories.$inferSelect)[]>(categoriesData)
+  const [allTasks, setAllTasks] = useState<(typeof tasks.$inferSelect)[]>(tasksData)
+  const [allCheckItems, setAllCheckItems] = useState<(typeof check_items.$inferSelect)[]>(checkItemsData)
+  const [allTaskChecks, setAllTaskChecks] = useState<(typeof task_checks.$inferSelect)[]>(taskChecksData)
 
   useEffect(() => {
     // unsubscribe 関数を格納する配列
@@ -48,33 +37,20 @@ export function Home({
     async function setupLiveAndLoad() {
       // 2) ライブクエリ購読（Promise なので await が必要）
       const [catLive, taskLive, itemLive, checkLive] = await Promise.all([
-        pgClient.live.query(
-          db.select().from(categories).toSQL().sql,
-          [],
-          (res) => setAllCategories((res as any).rows ?? res)
+        pgClient.live.query(db.select().from(categories).toSQL().sql, [], (res) =>
+          setAllCategories((res as any).rows ?? res),
         ),
-        pgClient.live.query(db.select().from(tasks).toSQL().sql, [], (res) =>
-          setAllTasks((res as any).rows ?? res)
+        pgClient.live.query(db.select().from(tasks).toSQL().sql, [], (res) => setAllTasks((res as any).rows ?? res)),
+        pgClient.live.query(db.select().from(check_items).toSQL().sql, [], (res) =>
+          setAllCheckItems((res as any).rows ?? res),
         ),
-        pgClient.live.query(
-          db.select().from(check_items).toSQL().sql,
-          [],
-          (res) => setAllCheckItems((res as any).rows ?? res)
-        ),
-        pgClient.live.query(
-          db.select().from(task_checks).toSQL().sql,
-          [],
-          (res) => setAllTaskChecks((res as any).rows ?? res)
+        pgClient.live.query(db.select().from(task_checks).toSQL().sql, [], (res) =>
+          setAllTaskChecks((res as any).rows ?? res),
         ),
       ])
 
       // unsubscribe の参照を保存
-      unsubscribers = [
-        catLive.unsubscribe,
-        taskLive.unsubscribe,
-        itemLive.unsubscribe,
-        checkLive.unsubscribe,
-      ]
+      unsubscribers = [catLive.unsubscribe, taskLive.unsubscribe, itemLive.unsubscribe, checkLive.unsubscribe]
     }
 
     setupLiveAndLoad()
@@ -102,10 +78,7 @@ export function Home({
     setIsTaskModalOpen(true)
   }
 
-  const handleSaveCategory = async (
-    categoryData: any,
-    checkItemsData: any[]
-  ) => {
+  const handleSaveCategory = async (categoryData: any, checkItemsData: any[]) => {
     try {
       if (editingCategory) {
         // Update existing category
@@ -115,9 +88,7 @@ export function Home({
           .where(eq(categories.id, editingCategory.id))
 
         // Delete existing check items for this category
-        await db
-          .delete(check_items)
-          .where(eq(check_items.category_id, editingCategory.id))
+        await db.delete(check_items).where(eq(check_items.category_id, editingCategory.id))
       } else {
         // Create new category
         const categoryId = uuidv4()
@@ -146,7 +117,24 @@ export function Home({
 
       setIsCategoryModalOpen(false)
     } catch (error) {
-      console.error('Error saving category:', error)
+      console.error("Error saving category:", error)
+    }
+  }
+
+  const handleDeleteCategory = async (categoryId: string) => {
+    try {
+      // カテゴリを削除すると、関連するタスク、チェック項目、タスクチェックは
+      // カスケード削除されるため、カテゴリのみを削除すれば良い
+      await db.delete(categories).where(eq(categories.id, categoryId))
+
+      // カテゴリが削除されたら、選択中のカテゴリをリセット
+      if (selectedCategory === categoryId) {
+        setSelectedCategory(null)
+      }
+
+      setIsCategoryModalOpen(false)
+    } catch (error) {
+      console.error("Error deleting category:", error)
     }
   }
 
@@ -159,17 +147,15 @@ export function Home({
         id: taskId,
         category_id: taskData.category_id,
         name: taskData.name,
-        note: taskData.note || '',
+        note: taskData.note || "",
         due_to: taskData.due_to ? new Date(taskData.due_to) : null,
-        status: 'todo',
+        status: "todo",
         created_at: new Date(),
         updated_at: new Date(),
       })
 
       // Insert task checks for each check item in the category
-      const categoryCheckItems = allCheckItems.filter(
-        (item) => item.category_id === taskData.category_id
-      )
+      const categoryCheckItems = allCheckItems.filter((item) => item.category_id === taskData.category_id)
 
       for (let i = 0; i < categoryCheckItems.length; i++) {
         const checkItem = categoryCheckItems[i]
@@ -186,21 +172,15 @@ export function Home({
 
       setIsTaskModalOpen(false)
     } catch (error) {
-      console.error('Error saving task:', error)
+      console.error("Error saving task:", error)
     }
   }
 
-  const filteredTasks = selectedCategory
-    ? allTasks.filter((task) => task.category_id === selectedCategory)
-    : allTasks
+  const filteredTasks = selectedCategory ? allTasks.filter((task) => task.category_id === selectedCategory) : allTasks
 
   return (
     <div className="flex h-screen flex-col">
-      <TopBar
-        onAddTask={handleAddTask}
-        sortBy={sortBy}
-        onSortChange={setSortBy}
-      />
+      <TopBar onAddTask={handleAddTask} sortBy={sortBy} onSortChange={setSortBy} />
 
       <div className="flex flex-1 overflow-hidden">
         <Sidebar
@@ -226,14 +206,9 @@ export function Home({
         isOpen={isCategoryModalOpen}
         onClose={() => setIsCategoryModalOpen(false)}
         onSave={handleSaveCategory}
+        onDelete={handleDeleteCategory}
         category={editingCategory}
-        checkItems={
-          editingCategory
-            ? allCheckItems.filter(
-                (item) => item.category_id === editingCategory.id
-              )
-            : []
-        }
+        checkItems={editingCategory ? allCheckItems.filter((item) => item.category_id === editingCategory.id) : []}
       />
 
       <TaskModal

@@ -4,7 +4,7 @@ import './index.css'
 import migrations from './assets/migrations.json'
 import { db } from './lib/db-client.ts'
 import { categories, check_items, task_checks, tasks } from '@/db/schema.ts'
-import { Home } from './app/page.tsx'
+import  Home  from './app/page.tsx'
 
 // https://github.com/drizzle-team/drizzle-orm/discussions/2532
 await (db as any).dialect.migrate(migrations, (db as any).session, {

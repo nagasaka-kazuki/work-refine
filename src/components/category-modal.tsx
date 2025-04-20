@@ -1,54 +1,48 @@
-'use client'
+"use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from "react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { GripVertical, X, Plus, Trash2 } from "lucide-react"
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { GripVertical, X, Plus } from 'lucide-react'
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 interface CategoryModalProps {
   isOpen: boolean
   onClose: () => void
   onSave: (category: any, checkItems: any[]) => void
+  onDelete?: (categoryId: string) => void
   category: any | null
   checkItems: any[]
 }
 
-export function CategoryModal({
-  isOpen,
-  onClose,
-  onSave,
-  category,
-  checkItems,
-}: CategoryModalProps) {
-  const [name, setName] = useState('')
-  const [items, setItems] = useState<
-    { id?: string; name: string; sort_position: number }[]
-  >([])
+export function CategoryModal({ isOpen, onClose, onSave, onDelete, category, checkItems }: CategoryModalProps) {
+  const [name, setName] = useState("")
+  const [items, setItems] = useState<{ id?: string; name: string; sort_position: number }[]>([])
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
 
   useEffect(() => {
     if (category) {
       setName(category.name)
-      setItems(
-        checkItems.length > 0
-          ? [...checkItems].sort((a, b) => a.sort_position - b.sort_position)
-          : []
-      )
+      setItems(checkItems.length > 0 ? [...checkItems].sort((a, b) => a.sort_position - b.sort_position) : [])
     } else {
-      setName('')
-      setItems([{ name: '', sort_position: 0 }])
+      setName("")
+      setItems([{ name: "", sort_position: 0 }])
     }
   }, [category, checkItems, isOpen])
 
   const handleAddItem = () => {
-    setItems([...items, { name: '', sort_position: items.length }])
+    setItems([...items, { name: "", sort_position: items.length }])
   }
 
   const handleRemoveItem = (index: number) => {
@@ -71,9 +65,16 @@ export function CategoryModal({
     if (!name.trim()) return
 
     // Filter out empty check items
-    const validItems = items.filter((item) => item.name.trim() !== '')
+    const validItems = items.filter((item) => item.name.trim() !== "")
 
     onSave({ id: category?.id, name }, validItems)
+  }
+
+  const handleDelete = () => {
+    if (category && onDelete) {
+      onDelete(category.id)
+      setIsDeleteDialogOpen(false)
+    }
   }
 
   // Move item up or down in the list
@@ -93,92 +94,108 @@ export function CategoryModal({
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>
-            {category ? 'カテゴリ編集' : 'カテゴリ追加'}
-          </DialogTitle>
-        </DialogHeader>
+    <>
+      <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{category ? "カテゴリ編集" : "カテゴリ追加"}</DialogTitle>
+          </DialogHeader>
 
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="category-name">カテゴリ名</Label>
-            <Input
-              id="category-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="カテゴリ名を入力"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>チェック項目</Label>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="category-name">カテゴリ名</Label>
+              <Input
+                id="category-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="カテゴリ名を入力"
+              />
+            </div>
 
             <div className="space-y-2">
-              {items.map((item, index) => (
-                <div key={index} className="flex items-center gap-2">
-                  <div className="cursor-move">
-                    <GripVertical className="h-5 w-5 text-muted-foreground" />
+              <Label>チェック項目</Label>
+
+              <div className="space-y-2">
+                {items.map((item, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <div className="cursor-move">
+                      <GripVertical className="h-5 w-5 text-muted-foreground" />
+                    </div>
+
+                    <Input
+                      value={item.name}
+                      onChange={(e) => handleItemChange(index, e.target.value)}
+                      placeholder={`チェック項目 ${index + 1}`}
+                      className="flex-1"
+                    />
+
+                    <div className="flex gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => moveItem(index, index - 1)}
+                        disabled={index === 0}
+                      >
+                        ↑
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => moveItem(index, index + 1)}
+                        disabled={index === items.length - 1}
+                      >
+                        ↓
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => handleRemoveItem(index)}>
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
+                ))}
 
-                  <Input
-                    value={item.name}
-                    onChange={(e) => handleItemChange(index, e.target.value)}
-                    placeholder={`チェック項目 ${index + 1}`}
-                    className="flex-1"
-                  />
-
-                  <div className="flex gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => moveItem(index, index - 1)}
-                      disabled={index === 0}
-                    >
-                      ↑
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => moveItem(index, index + 1)}
-                      disabled={index === items.length - 1}
-                    >
-                      ↓
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleRemoveItem(index)}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full"
-                onClick={handleAddItem}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                チェック項目を追加
-              </Button>
+                <Button variant="outline" size="sm" className="w-full" onClick={handleAddItem}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  チェック項目を追加
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
-            キャンセル
-          </Button>
-          <Button onClick={handleSave} disabled={!name.trim()}>
-            保存
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          <DialogFooter className="flex items-center justify-between sm:justify-between">
+            {category && onDelete && (
+              <Button variant="destructive" onClick={() => setIsDeleteDialogOpen(true)}>
+                <Trash2 className="h-4 w-4 mr-2" />
+                削除
+              </Button>
+            )}
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={onClose}>
+                キャンセル
+              </Button>
+              <Button onClick={handleSave} disabled={!name.trim()}>
+                保存
+              </Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>カテゴリを削除しますか？</AlertDialogTitle>
+            <AlertDialogDescription>
+              このカテゴリを削除すると、関連するすべてのタスクとチェック項目も削除されます。この操作は元に戻せません。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={onClose}>キャンセル</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
+              削除する
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   )
 }
