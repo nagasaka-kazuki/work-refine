@@ -151,7 +151,6 @@ export function TaskRow({
           )}
 
           <div className="space-y-2">
-            <h4 className="text-sm font-medium mb-2">チェックリスト</h4>
             {sortedTaskChecks.length === 0 ? (
               <div className="text-sm text-muted-foreground">
                 チェック項目がありません
