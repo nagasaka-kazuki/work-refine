@@ -9,17 +9,27 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { PlusCircle } from 'lucide-react'
+import { DataImportExport } from '@/components/data-import-export'
 
 interface TopBarProps {
   onAddTask: () => void
   sortBy: string
   onSortChange: (value: any) => void
+  onDataImported: () => void
 }
 
-export function TopBar({ onAddTask, sortBy, onSortChange }: TopBarProps) {
+export function TopBar({
+  onAddTask,
+  sortBy,
+  onSortChange,
+  onDataImported,
+}: TopBarProps) {
   return (
     <div className="border-b bg-background p-4 flex items-center justify-between">
-      <h1 className="text-xl font-bold">タスク管理</h1>
+      <div className="flex items-center gap-4">
+        <h1 className="text-xl font-bold">タスク管理</h1>
+        <DataImportExport onDataImported={onDataImported} />
+      </div>
 
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
