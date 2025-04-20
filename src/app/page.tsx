@@ -24,6 +24,7 @@ export default function Home({
   checkItemsData,
   taskChecksData,
 }: Props) {
+  // TODO :モーダルを閉じるときに、なんかレイヤー残ってるから。
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [sortBy, setSortBy] = useState<'due_to' | 'status' | 'created_at'>(
     'due_to'

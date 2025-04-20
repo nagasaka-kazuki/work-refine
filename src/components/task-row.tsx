@@ -107,7 +107,7 @@ export function TaskRow({
         <div className="flex-1 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="font-medium">{task.name}</span>
-            <Badge variant="outline" className="ml-2">
+            <Badge variant="default" className="ml-2">
               {categoryName}
             </Badge>
           </div>
@@ -116,7 +116,7 @@ export function TaskRow({
             {dueDate && (
               <Badge
                 variant={
-                  isOverdue ? 'destructive' : isDueSoon ? 'warning' : 'outline'
+                  isOverdue ? 'destructive' : isDueSoon ? 'warning' : 'default'
                 }
               >
                 {formatDueDate(dueDate)}
