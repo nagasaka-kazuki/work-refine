@@ -12,14 +12,6 @@ await (db as any).dialect.migrate(migrations, (db as any).session, {
   migrationsTable: 'drizzle_migrations',
 })
 
-db.select()
-  .from(categories)
-  .then((data) => {
-    console.log(data.map((item) => item.name))
-  })
-
-console.log(db.select().from(categories).toSQL())
-
 const [cats, tsks, chkItems, chkTs] = await Promise.all([
   db.select().from(categories),
   db.select().from(tasks),
