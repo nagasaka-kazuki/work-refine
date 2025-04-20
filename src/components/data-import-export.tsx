@@ -89,7 +89,9 @@ export function DataImportExport() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>データのインポート</DialogTitle>
-            <DialogDescription>エクスポートしたJSONファイルを選択してください。現在のデータは一致しないもののみ追加されます。</DialogDescription>
+            <DialogDescription>
+              エクスポートしたJSONファイルを選択してください。現在のデータは一致しないもののみ追加されます。
+            </DialogDescription>
           </DialogHeader>
 
           <div className="py-4">

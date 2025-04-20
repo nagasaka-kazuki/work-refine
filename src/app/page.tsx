@@ -1,24 +1,15 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { TaskList } from '@/components/task-list'
 import { Sidebar } from '@/components/sidebar'
 import { TopBar } from '@/components/top-bar'
 import { CategoryModal } from '@/components/category-modal'
 import { TaskModal } from '@/components/task-modal'
-import {
-  categories,
-  tasks,
-  check_items,
-  task_checks,
-  Category,
-  Task,
-  CheckItem,
-  TaskCheck,
-} from '@/db/schema'
-import { db, pgClient } from '@/lib/db-client'
+import { categories, Category, Task, CheckItem, TaskCheck } from '@/db/schema'
 import { CategoryRepository } from '@/lib/repositories/categories'
 import { TaskRepository } from '@/lib/repositories/tasks'
+import { useLiveSync } from '@/hooks/use-live-sync'
 
 type Props = {
   categoriesData: Category[]
@@ -42,55 +33,12 @@ export default function Home({
   const [editingCategory, setEditingCategory] = useState<
     typeof categories.$inferSelect | null
   >(null)
-  const [allCategories, setAllCategories] = useState(categoriesData)
-  const [allTasks, setAllTasks] = useState(tasksData)
-  const [allCheckItems, setAllCheckItems] = useState(checkItemsData)
-  const [allTaskChecks, setAllTaskChecks] = useState(taskChecksData)
-  const [liveSubscriptions, setLiveSubscriptions] = useState<
-    Array<() => Promise<void>>
-  >([])
-
-  const setupLiveSubscriptions = async () => {
-    // 既存の購読をクリーンアップ
-    if (liveSubscriptions.length > 0) {
-      await Promise.all(liveSubscriptions.map((unsub) => unsub()))
-    }
-
-    // 新しい購読をセットアップ
-    const [catLive, taskLive, itemLive, checkLive] = await Promise.all([
-      pgClient.live.query(db.select().from(categories).toSQL().sql, [], (res) =>
-        setAllCategories((res as any).rows ?? res)
-      ),
-      pgClient.live.query(db.select().from(tasks).toSQL().sql, [], (res) =>
-        setAllTasks((res as any).rows ?? res)
-      ),
-      pgClient.live.query(
-        db.select().from(check_items).toSQL().sql,
-        [],
-        (res) => setAllCheckItems((res as any).rows ?? res)
-      ),
-      pgClient.live.query(
-        db.select().from(task_checks).toSQL().sql,
-        [],
-        (res) => setAllTaskChecks((res as any).rows ?? res)
-      ),
-    ])
-
-    // 新しい購読を保存
-    setLiveSubscriptions([
-      catLive.unsubscribe,
-      taskLive.unsubscribe,
-      itemLive.unsubscribe,
-      checkLive.unsubscribe,
-    ])
-  }
-
-  useEffect(() => {
-    setupLiveSubscriptions()
-    return () => {
-      liveSubscriptions.forEach((unsub) => unsub())
-    }
-  }, [])
+  const { allCategories, allTasks, allCheckItems, allTaskChecks } = useLiveSync(
+    categoriesData,
+    tasksData,
+    checkItemsData,
+    taskChecksData
+  )
 
   const handleAddCategory = () => {
     setEditingCategory(null)

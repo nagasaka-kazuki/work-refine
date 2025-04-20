@@ -44,7 +44,9 @@ const DialogContent = React.forwardRef<
       {...props}
     >
       {/* スクロール可能領域 */}
-      <ScrollArea type="auto" className="max-h-[70dvh] px-1 ">{children}</ScrollArea>
+      <ScrollArea type="auto" className="max-h-[70dvh] px-1 ">
+        {children}
+      </ScrollArea>
 
       <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
         <X className="h-4 w-4" />
