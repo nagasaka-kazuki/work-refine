@@ -11,9 +11,6 @@ interface TaskListProps {
   taskChecks: any[]
   sortBy: string
   getTaskStatus: (taskId: string) => 'todo' | 'doing' | 'done'
-  onAddOriginalCheck: (taskId: string, name: string) => void
-  onDeleteOriginalCheck: (checkItemId: string) => void
-  handleCheckToggle: (tcId: string, done: boolean) => Promise<void>
 }
 
 export function TaskList({
@@ -23,9 +20,6 @@ export function TaskList({
   taskChecks,
   sortBy,
   getTaskStatus,
-  onAddOriginalCheck,
-  onDeleteOriginalCheck,
-  handleCheckToggle,
 }: TaskListProps) {
   const [expandedTasks, setExpandedTasks] = useState<Record<string, boolean>>(
     {}
@@ -87,9 +81,6 @@ export function TaskList({
               onToggleExpand={() => toggleTaskExpanded(task.id)}
               taskChecks={getTaskChecks(task.id)}
               getCheckItem={getCheckItem}
-              onAddOriginalCheck={onAddOriginalCheck}
-              onDeleteOriginalCheck={onDeleteOriginalCheck}
-              handleCheckToggle={handleCheckToggle}
             />
           ))
         )}

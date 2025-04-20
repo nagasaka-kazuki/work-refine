@@ -19,7 +19,7 @@ export const CheckItemRepository = {
     }
   },
 
-    createForTask: async (taskId: string, name: string) => {
+  createForTask: async (taskId: string, name: string) => {
     // まず既存のタスク固有チェック数を取得してソート位置を算出
     const existing = await db
       .select()

@@ -4,28 +4,28 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Trash2 } from 'lucide-react'
-import { CheckItem } from '@/db/schema'
+import {  Trash2 } from 'lucide-react'
+import { CheckItem, TaskCheck } from '@/db/schema'
+import { CheckItemRepository } from '@/lib/repositories/checkItems'
+import { CheckItemArea } from './check-item'
 
 interface TaskOriginalCheckItemAreaProps {
   taskId: string
   checks: CheckItem[]
-  onAdd: (taskId: string, name: string) => void
-  onDelete: (checkItemId: string) => void
+  taskChecks: TaskCheck[]
 }
 
 export function TaskOriginalCheckItemArea({
   taskId,
   checks,
-  onAdd,
-  onDelete,
+  taskChecks,
 }: TaskOriginalCheckItemAreaProps) {
   const [newName, setNewName] = useState('')
 
   const handleAdd = () => {
     const name = newName.trim()
     if (!name) return
-    onAdd(taskId, name)
+    CheckItemRepository.createForTask(taskId, name)
     setNewName('')
   }
 
@@ -35,11 +35,15 @@ export function TaskOriginalCheckItemArea({
         <div className="space-y-1">
           {checks.map((check) => (
             <div key={check.id} className="flex items-center justify-between">
-              <span>{check.name}</span>
+              <CheckItemArea ci={check} tc={
+                taskChecks.find((tc) => tc.check_item_id === check.id)!
+              }/>
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => onDelete(check.id)}
+                onClick={() => {
+                  CheckItemRepository.deleteById(check.id)
+                }}
               >
                 <Trash2 className="h-4 w-4" />
               </Button>

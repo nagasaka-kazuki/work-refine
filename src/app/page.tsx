@@ -27,15 +27,21 @@ export default function Home({
   taskChecksData,
 }: Props) {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
-  const [sortBy, setSortBy] = useState<'due_to' | 'status' | 'created_at'>('due_to')
+  const [sortBy, setSortBy] = useState<'due_to' | 'status' | 'created_at'>(
+    'due_to'
+  )
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false)
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
-  const [editingCategory, setEditingCategory] = useState<typeof categories.$inferSelect | null>(null)
+  const [editingCategory, setEditingCategory] = useState<
+    typeof categories.$inferSelect | null
+  >(null)
   const [allCategories, setAllCategories] = useState(categoriesData)
   const [allTasks, setAllTasks] = useState(tasksData)
   const [allCheckItems, setAllCheckItems] = useState(checkItemsData)
   const [allTaskChecks, setAllTaskChecks] = useState(taskChecksData)
-  const [liveSubscriptions, setLiveSubscriptions] = useState<Array<() => Promise<void>>>([])
+  const [liveSubscriptions, setLiveSubscriptions] = useState<
+    Array<() => Promise<void>>
+  >([])
 
   const setupLiveSubscriptions = async () => {
     // 既存の購読をクリーンアップ
@@ -75,7 +81,7 @@ export default function Home({
   useEffect(() => {
     setupLiveSubscriptions()
     return () => {
-      liveSubscriptions.forEach(unsub => unsub())
+      liveSubscriptions.forEach((unsub) => unsub())
     }
   }, [])
 
@@ -93,14 +99,17 @@ export default function Home({
     setIsTaskModalOpen(true)
   }
 
-  const handleSaveCategory = async (categoryData: any, checkItemsData: any[]) => {
+  const handleSaveCategory = async (
+    categoryData: any,
+    checkItemsData: any[]
+  ) => {
     try {
-      const names = checkItemsData.map(item => item.name)
+      const names = checkItemsData.map((item) => item.name)
       if (editingCategory) {
         await CategoryRepository.updateWithChecks(
           editingCategory.id,
           categoryData.name,
-          names,
+          names
         )
       } else {
         await CategoryRepository.create(categoryData.name, names)
@@ -130,46 +139,26 @@ export default function Home({
     }
   }
 
-  const handleAddOriginalCheck = async (taskId: string, name: string) => {
-    try {
-      await CheckItemRepository.createForTask(taskId, name)
-    } catch (error) {
-      console.error('Error adding task-specific check item:', error)
-    }
-  }
-
-  const handleDeleteOriginalCheck = async (checkItemId: string) => {
-    try {
-      await CheckItemRepository.deleteById(checkItemId)
-    } catch (error) {
-      console.error('Error deleting task-specific check item:', error)
-    }
-  }
-
-  const handleCheckToggle = async (tcId: string, done: boolean) => {
-    try {
-      await TaskCheckRepository.toggleStatus(tcId, !done)
-    } catch (e) {
-      console.error(e)
-    }
-  }
-
   const getTaskStatus = (taskId: string) => {
-    const checks = allTaskChecks.filter(c => c.task_id === taskId)
+    const checks = allTaskChecks.filter((c) => c.task_id === taskId)
     if (checks.length === 0) return 'todo'
-    const completed = checks.filter(c => c.is_done).length
+    const completed = checks.filter((c) => c.is_done).length
     if (completed === 0) return 'todo'
     if (completed === checks.length) return 'done'
     return 'doing'
   }
 
   const filteredTasks = selectedCategory
-    ? allTasks.filter(t => t.category_id === selectedCategory)
+    ? allTasks.filter((t) => t.category_id === selectedCategory)
     : allTasks
 
   return (
     <div className="flex h-screen flex-col">
-      <TopBar onAddTask={handleAddTask} sortBy={sortBy} onSortChange={setSortBy} />
+      <TopBar
+        onAddTask={handleAddTask}
+        sortBy={sortBy}
+        onSortChange={setSortBy}
+      />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar
           categories={allCategories}
@@ -186,9 +175,6 @@ export default function Home({
             taskChecks={allTaskChecks}
             sortBy={sortBy}
             getTaskStatus={getTaskStatus}
-            onAddOriginalCheck={handleAddOriginalCheck}
-            onDeleteOriginalCheck={handleDeleteOriginalCheck}
-            handleCheckToggle={handleCheckToggle}
           />
         </main>
       </div>
@@ -200,7 +186,9 @@ export default function Home({
         category={editingCategory}
         checkItems={
           editingCategory
-            ? allCheckItems.filter(item => item.category_id === editingCategory.id)
+            ? allCheckItems.filter(
+                (item) => item.category_id === editingCategory.id
+              )
             : []
         }
       />

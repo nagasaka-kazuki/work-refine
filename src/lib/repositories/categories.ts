@@ -51,9 +51,7 @@ export const CategoryRepository = {
     // 既存チェック項目・タスクチェックを削除
     await db.delete(check_items).where(eq(check_items.category_id, categoryId))
     if (taskIds.length > 0) {
-      await db
-        .delete(task_checks)
-        .where(inArray(task_checks.task_id, taskIds))
+      await db.delete(task_checks).where(inArray(task_checks.task_id, taskIds))
     }
 
     // 新しいチェック項目を作成

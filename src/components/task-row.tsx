@@ -8,17 +8,16 @@ import { ChevronDown, ChevronRight } from 'lucide-react'
 import { CheckItem, Task, TaskCheck } from '@/db/schema'
 import { cn } from '@/lib/utils'
 import { TaskOriginalCheckItemArea } from './task-check-editor'
+import { TaskCheckRepository } from '@/lib/repositories/taskChecks'
+import { CheckItemArea } from './check-item'
 
 interface TaskRowProps {
-  task: Task,
+  task: Task
   categoryName: string
   isExpanded: boolean
   onToggleExpand: () => void
   taskChecks: TaskCheck[]
   getCheckItem: (id: string) => CheckItem | undefined
-  onAddOriginalCheck: (taskId: string, name: string) => void
-  onDeleteOriginalCheck: (checkItemId: string) => void
-  handleCheckToggle: (tcId: string, done: boolean) => Promise<void>
 }
 
 export function TaskRow({
@@ -28,19 +27,16 @@ export function TaskRow({
   onToggleExpand,
   taskChecks,
   getCheckItem,
-  onAddOriginalCheck,
-  onDeleteOriginalCheck,
-  handleCheckToggle,
 }: TaskRowProps) {
   // 1. ソート済みチェック全体
-  const sortedTaskChecks:TaskCheck[] = [...taskChecks].sort(
+  const sortedTaskChecks: TaskCheck[] = [...taskChecks].sort(
     (a, b) => a.sort_position - b.sort_position
   )
 
   // 2. 共通 vs オリジナルを分割
-  const [categoryChecks, originalChecks] = (() => {
-    const cat: TaskCheck[]  = []
-    const orig: TaskCheck[]  = []
+  const [categoryTaskChecks, originalTaskChecks] = (() => {
+    const cat: TaskCheck[] = []
+    const orig: TaskCheck[] = []
     for (const tc of sortedTaskChecks) {
       const ci = getCheckItem(tc.check_item_id)
       if (ci?.task_id) orig.push(tc)
@@ -49,7 +45,7 @@ export function TaskRow({
     return [cat, orig] as const
   })()
 
-  const originalCheckItems: CheckItem[] = originalChecks
+  const originalCheckItems: CheckItem[] = originalTaskChecks
     .map((tc) => getCheckItem(tc.check_item_id))
     .filter((ci): ci is CheckItem => !!ci)
 
@@ -141,32 +137,18 @@ export function TaskRow({
 
           {/* カテゴリ共通チェック */}
           <div className="space-y-2">
-            {categoryChecks.length === 0 ? (
+            {categoryTaskChecks.length === 0 ? (
               <div className="text-sm text-muted-foreground">
                 チェック項目がありません
               </div>
             ) : (
-              categoryChecks.map((tc) => {
+              categoryTaskChecks.map((tc) => {
                 const ci = getCheckItem(tc.check_item_id)
                 return ci ? (
-                  <div key={tc.id} className="flex items-center gap-2">
-                    <Checkbox
-                      checked={tc.is_done}
-                      onCheckedChange={() =>
-                        handleCheckToggle(tc.id, tc.is_done)
-                      }
-                      id={`check-${tc.id}`}
-                    />
-                    <label
-                      htmlFor={`check-${tc.id}`}
-                      className={cn(
-                        'text-sm cursor-pointer',
-                        tc.is_done && 'line-through text-muted-foreground'
-                      )}
-                    >
-                      {ci.name}
-                    </label>
-                  </div>
+                  <CheckItemArea
+                    key={tc.id}
+                    tc={tc}
+                    ci={ci}/>
                 ) : null
               })
             )}
@@ -176,8 +158,7 @@ export function TaskRow({
           <TaskOriginalCheckItemArea
             taskId={task.id}
             checks={originalCheckItems}
-            onAdd={onAddOriginalCheck}
-            onDelete={onDeleteOriginalCheck}
+            taskChecks={originalTaskChecks}
           />
         </CardContent>
       )}

@@ -58,7 +58,7 @@ export function DataImportExport() {
     } catch (error) {
       console.error('データのインポートに失敗しました:', error)
       toast.error(
-        'データのインポートに失敗しました。ファイルの内容を確認してください。'
+        'データのインポートに失敗しました。ファイルの内容を確認してください。'+error
       )
     } finally {
       setIsImporting(false)

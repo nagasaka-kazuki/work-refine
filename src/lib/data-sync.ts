@@ -132,7 +132,7 @@ export async function importDiffData(file: File): Promise<void> {
   // チェック項目の差分登録
   const nameToItemId = new Map<string, string>()
   for (const it of items) {
-    const catName = idToCatName.get(it.category_id)!
+    const catName = idToCatName.get(it.category_id!)!
     const catId = nameToCatId.get(catName)!
     const exist = await db
       .select({ id: check_items.id })

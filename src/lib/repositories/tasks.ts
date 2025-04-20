@@ -55,8 +55,8 @@ export const TaskRepository = {
   ) => {
     await db
       .update(tasks)
-      .set({ 
-        ...updateData, 
+      .set({
+        ...updateData,
         due_to: updateData.due_to ? new Date(updateData.due_to) : null,
       })
       .where(eq(tasks.id, taskId))
