@@ -18,7 +18,7 @@ interface TaskRowProps {
 }
 
 export function TaskRow({ task, categoryName, isExpanded, onToggleExpand, taskChecks, getCheckItem }: TaskRowProps) {
-  const [status, setStatus] = useState(task.status)
+  const [status, setStatus] = useState<"todo" | "doing" | "done">(task.status)
 
   // Calculate if task is due soon or overdue
   const now = new Date()
@@ -40,7 +40,7 @@ export function TaskRow({ task, categoryName, isExpanded, onToggleExpand, taskCh
   }
 
   // Handle status change
-  const handleStatusChange = async (newStatus: string) => {
+  const handleStatusChange = async (newStatus: "todo" | "doing" | "done") => {
     try {
       await db
         .update(tasks)
@@ -101,11 +101,11 @@ export function TaskRow({ task, categoryName, isExpanded, onToggleExpand, taskCh
               className="cursor-pointer"
               onClick={(e) => {
                 e.stopPropagation()
-                const nextStatus = {
+                const nextStatus: "todo" | "doing" | "done" = ( {
                   todo: "doing",
                   doing: "done",
                   done: "todo",
-                }[status]
+                } as Record<"todo" | "doing" | "done", "todo" | "doing" | "done"> )[status]
                 handleStatusChange(nextStatus)
               }}
             >

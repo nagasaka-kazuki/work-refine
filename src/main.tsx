@@ -1,7 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
-import App from './App.tsx'
 import migrations from './assets/migrations.json'
 import { db } from './lib/db-client.ts'
 import { categories, check_items, task_checks, tasks } from '@/db/schema.ts'
