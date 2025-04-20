@@ -6,6 +6,7 @@ import {
   boolean,
   timestamp,
   pgTable,
+  check,
 } from 'drizzle-orm/pg-core'
 import { z } from 'zod'
 import { createSelectSchema, createInsertSchema } from 'drizzle-zod'
@@ -21,18 +22,36 @@ export const categories = pgTable('categories', {
 })
 
 // チェック項目テーブル
-export const check_items = pgTable('check_items', {
-  id: uuid('id').primaryKey(),
-  category_id: uuid('category_id')
-    .references(() => categories.id, { onDelete: 'cascade' })
-    .notNull(),
-  name: varchar('name', { length: 255 }).notNull(),
-  sort_position: integer('sort_position').notNull(),
-  created_at: timestamp('created_at').defaultNow(),
-  updated_at: timestamp('updated_at')
-    .defaultNow()
-    .$onUpdate(() => sql`now()`),
-})
+export const check_items = pgTable(
+  'check_items',
+  {
+    id: uuid('id').primaryKey(),
+    category_id: uuid('category_id').references(() => categories.id, {
+      onDelete: 'cascade',
+    }),
+    task_id: uuid('task_id').references(() => tasks.id, {
+      onDelete: 'cascade',
+    }),
+    name: varchar('name', { length: 255 }).notNull(),
+    sort_position: integer('sort_position').notNull(),
+    created_at: timestamp('created_at').defaultNow(),
+    updated_at: timestamp('updated_at')
+      .defaultNow()
+      .$onUpdate(() => sql`now()`),
+  },
+  (table) => [
+    check(
+      'check_items_parent_xor',
+      sql`
+        (
+          (${table.category_id} IS NOT NULL AND ${table.task_id} IS NULL)
+          OR
+          (${table.category_id} IS NULL AND ${table.task_id} IS NOT NULL)
+        )
+      `
+    ),
+  ]
+)
 
 // タスクテーブル
 export const tasks = pgTable('tasks', {

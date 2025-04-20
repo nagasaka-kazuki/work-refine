@@ -11,7 +11,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {  X, Plus, Trash2 } from 'lucide-react'
+import { X, Plus, Trash2 } from 'lucide-react'
 import { DialogDescription } from '@radix-ui/react-dialog'
 
 interface CategoryModalProps {
@@ -102,7 +102,9 @@ export function CategoryModal({
             <DialogTitle>
               {category ? 'カテゴリ編集' : 'カテゴリ追加'}
             </DialogTitle>
-            <DialogDescription className='sr-only'>カテゴリを編集するダイアログ</DialogDescription>
+            <DialogDescription className="sr-only">
+              カテゴリを編集するダイアログ
+            </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
@@ -121,7 +123,6 @@ export function CategoryModal({
               <div className="space-y-2">
                 {items.map((item, index) => (
                   <div key={index} className="flex items-center gap-2">
-
                     <Input
                       value={item.name}
                       onChange={(e) => handleItemChange(index, e.target.value)}
@@ -172,10 +173,7 @@ export function CategoryModal({
 
           <DialogFooter className="flex items-center justify-between">
             {category && onDelete && (
-              <Button
-                variant="destructive"
-                onClick={handleDelete}
-              >
+              <Button variant="destructive" onClick={handleDelete}>
                 <Trash2 className="h-4 w-4 mr-2" />
                 削除
               </Button>

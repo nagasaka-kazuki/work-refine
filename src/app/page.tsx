@@ -260,6 +260,51 @@ export default function Home({
     }
   }
 
+  const handleAddOriginalCheck = async (taskId: string, name: string) => {
+    try {
+      // 既存タスク固有チェック項目数を取得しソート位置に利用
+      const existing = allCheckItems.filter((item) => item.task_id === taskId)
+      const position = existing.length
+      const checkItemId = uuidv4()
+      console.log('name', name)
+
+      // check_items テーブルに挿入
+      await db.insert(check_items).values({
+        id: checkItemId,
+        task_id: taskId,
+        name,
+        sort_position: position,
+        created_at: new Date(),
+        updated_at: new Date(),
+      })
+
+      // task_checks テーブルに紐付けレコードを挿入
+      await db.insert(task_checks).values({
+        id: uuidv4(),
+        task_id: taskId,
+        check_item_id: checkItemId,
+        is_done: false,
+        sort_position: position,
+        created_at: new Date(),
+        updated_at: new Date(),
+      })
+    } catch (error) {
+      console.error('Error adding task-specific check item:', error)
+    }
+  }
+
+  /**
+   * タスク固有チェック項目を削除
+   */
+  const handleDeleteOriginalCheck = async (checkItemId: string) => {
+    try {
+      // check_items を削除すると、task_checks は ON DELETE CASCADE により自動削除
+      await db.delete(check_items).where(eq(check_items.id, checkItemId))
+    } catch (error) {
+      console.error('Error deleting task-specific check item:', error)
+    }
+  }
+
   // Calculate task status for sorting
   const getTaskStatus = (taskId: string) => {
     const taskCheckItems = allTaskChecks.filter(
@@ -306,6 +351,9 @@ export default function Home({
             taskChecks={allTaskChecks}
             sortBy={sortBy}
             getTaskStatus={getTaskStatus}
+            // 追加: タスク固有チェック編集ハンドラ
+            onAddOriginalCheck={handleAddOriginalCheck}
+            onDeleteOriginalCheck={handleDeleteOriginalCheck}
           />
         </main>
       </div>

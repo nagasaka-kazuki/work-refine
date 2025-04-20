@@ -1,22 +1,25 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { ChevronDown, ChevronRight } from 'lucide-react'
 import { db } from '@/lib/db-client'
-import { task_checks } from '@/db/schema'
+import { CheckItem, Task, task_checks, TaskCheck } from '@/db/schema'
 import { eq } from 'drizzle-orm'
 import { cn } from '@/lib/utils'
+import { TaskOriginalCheckItemArea } from './task-check-editor'
 
 interface TaskRowProps {
-  task: any
+  task: Task,
   categoryName: string
   isExpanded: boolean
   onToggleExpand: () => void
-  taskChecks: any[]
-  getCheckItem: (id: string) => any
+  taskChecks: TaskCheck[]
+  getCheckItem: (id: string) => CheckItem | undefined
+  onAddOriginalCheck: (taskId: string, name: string) => void
+  onDeleteOriginalCheck: (checkItemId: string) => void
 }
 
 export function TaskRow({
@@ -26,92 +29,90 @@ export function TaskRow({
   onToggleExpand,
   taskChecks,
   getCheckItem,
+  onAddOriginalCheck,
+  onDeleteOriginalCheck,
 }: TaskRowProps) {
-  // Calculate task status based on check items
-  const calculateStatus = () => {
-    if (taskChecks.length === 0) return 'todo'
+  // 1. ソート済みチェック全体
+  const sortedTaskChecks:TaskCheck[] = [...taskChecks].sort(
+    (a, b) => a.sort_position - b.sort_position
+  )
 
-    const completedChecks = taskChecks.filter((check) => check.is_done).length
+  // 2. 共通 vs オリジナルを分割
+  const [categoryChecks, originalChecks] = (() => {
+    const cat: TaskCheck[]  = []
+    const orig: TaskCheck[]  = []
+    for (const tc of sortedTaskChecks) {
+      const ci = getCheckItem(tc.check_item_id)
+      if (ci?.task_id) orig.push(tc)
+      else cat.push(tc)
+    }
+    return [cat, orig] as const
+  })()
 
-    if (completedChecks === 0) return 'todo'
-    if (completedChecks === taskChecks.length) return 'done'
+  const originalCheckItems: CheckItem[] = originalChecks
+    .map((tc) => getCheckItem(tc.check_item_id))
+    .filter((ci): ci is CheckItem => !!ci)
+
+  // 3. ステータス計算
+  const calculateStatus = useCallback(() => {
+    if (sortedTaskChecks.length === 0) return 'todo'
+    const doneCount = sortedTaskChecks.filter((c) => c.is_done).length
+    if (doneCount === 0) return 'todo'
+    if (doneCount === sortedTaskChecks.length) return 'done'
     return 'doing'
-  }
+  }, [sortedTaskChecks])
 
   const [status, setStatus] = useState<'todo' | 'doing' | 'done'>(
     calculateStatus()
   )
-
-  // Update status when taskChecks change
   useEffect(() => {
     setStatus(calculateStatus())
-  }, [taskChecks])
+  }, [calculateStatus])
 
-  // Calculate if task is due soon or overdue
+  // 4. 期日バッジ
   const now = new Date()
   const dueDate = task.due_to ? new Date(task.due_to) : null
   const tomorrow = new Date(now)
   tomorrow.setDate(tomorrow.getDate() + 1)
-
   const isDueSoon =
     dueDate && dueDate > now && dueDate < tomorrow && status !== 'done'
   const isOverdue = dueDate && dueDate < now && status !== 'done'
 
-  // Format due date
-  const formatDueDate = (date: Date) => {
-    return new Intl.DateTimeFormat('ja-JP', {
+  const formatDueDate = (d: Date) =>
+    new Intl.DateTimeFormat('ja-JP', {
       month: 'numeric',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-    }).format(date)
-  }
+    }).format(d)
 
-  // Handle check item toggle
-  const handleCheckToggle = async (
-    taskCheckId: string,
-    currentValue: boolean
-  ) => {
+  // 5. トグル
+  const handleCheckToggle = async (tcId: string, done: boolean) => {
     try {
       await db
         .update(task_checks)
-        .set({
-          is_done: !currentValue,
-          updated_at: new Date(),
-        })
-        .where(eq(task_checks.id, taskCheckId))
-    } catch (error) {
-      console.error('Error updating check item:', error)
+        .set({ is_done: !done, updated_at: new Date() })
+        .where(eq(task_checks.id, tcId))
+    } catch (e) {
+      console.error(e)
     }
   }
 
-  // Sort task checks by sort_position
-  const sortedTaskChecks = [...taskChecks].sort(
-    (a, b) => a.sort_position - b.sort_position
-  )
-
   return (
     <Card className="overflow-hidden">
+      {/* ヘッダー */}
       <div
         className="p-4 flex items-center cursor-pointer hover:bg-accent/50"
         onClick={onToggleExpand}
       >
         <div className="mr-2">
-          {isExpanded ? (
-            <ChevronDown className="h-5 w-5" />
-          ) : (
-            <ChevronRight className="h-5 w-5" />
-          )}
+          {isExpanded ? <ChevronDown /> : <ChevronRight />}
         </div>
-
-        <div className="flex-1 flex items-center justify-between">
+        <div className="flex-1 flex justify-between items-center">
           <div className="flex items-center gap-2">
             <span className="font-medium">{task.name}</span>
-            <Badge variant="default" className="ml-2">
-              {categoryName}
-            </Badge>
+            <Badge variant="default">{categoryName}</Badge>
           </div>
-
           <div className="flex items-center gap-2">
             {dueDate && (
               <Badge
@@ -122,7 +123,6 @@ export function TaskRow({
                 {formatDueDate(dueDate)}
               </Badge>
             )}
-
             <Badge
               variant={
                 status === 'done'
@@ -142,6 +142,7 @@ export function TaskRow({
         </div>
       </div>
 
+      {/* ボディ */}
       {isExpanded && (
         <CardContent className="pt-0 pb-4">
           {task.note && (
@@ -150,38 +151,46 @@ export function TaskRow({
             </div>
           )}
 
+          {/* カテゴリ共通チェック */}
           <div className="space-y-2">
-            {sortedTaskChecks.length === 0 ? (
+            {categoryChecks.length === 0 ? (
               <div className="text-sm text-muted-foreground">
                 チェック項目がありません
               </div>
             ) : (
-              sortedTaskChecks.map((taskCheck) => {
-                const checkItem = getCheckItem(taskCheck.check_item_id)
-                return checkItem ? (
-                  <div key={taskCheck.id} className="flex items-center gap-2">
+              categoryChecks.map((tc) => {
+                const ci = getCheckItem(tc.check_item_id)
+                return ci ? (
+                  <div key={tc.id} className="flex items-center gap-2">
                     <Checkbox
-                      checked={taskCheck.is_done}
+                      checked={tc.is_done}
                       onCheckedChange={() =>
-                        handleCheckToggle(taskCheck.id, taskCheck.is_done)
+                        handleCheckToggle(tc.id, tc.is_done)
                       }
-                      id={`check-${taskCheck.id}`}
+                      id={`check-${tc.id}`}
                     />
                     <label
-                      htmlFor={`check-${taskCheck.id}`}
+                      htmlFor={`check-${tc.id}`}
                       className={cn(
                         'text-sm cursor-pointer',
-                        taskCheck.is_done &&
-                          'line-through text-muted-foreground'
+                        tc.is_done && 'line-through text-muted-foreground'
                       )}
                     >
-                      {checkItem.name}
+                      {ci.name}
                     </label>
                   </div>
                 ) : null
               })
             )}
           </div>
+
+          {/* タスク専用チェック編集UI */}
+          <TaskOriginalCheckItemArea
+            taskId={task.id}
+            checks={originalCheckItems}
+            onAdd={onAddOriginalCheck}
+            onDelete={onDeleteOriginalCheck}
+          />
         </CardContent>
       )}
     </Card>

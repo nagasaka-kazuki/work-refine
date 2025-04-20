@@ -40,5 +40,15 @@
     "bps": true,
     "folderMillis": 1745134529768,
     "hash": "54994f6d01d6aef33087e6b850acd730e88de7b268246f33b8c268645c6e914c"
+  },
+  {
+    "sql": [
+      "ALTER TABLE \"check_items\" ALTER COLUMN \"category_id\" DROP NOT NULL;",
+      "\nALTER TABLE \"check_items\" ADD COLUMN \"task_id\" uuid;",
+      "\nALTER TABLE \"check_items\" ADD CONSTRAINT \"check_items_task_id_tasks_id_fk\" FOREIGN KEY (\"task_id\") REFERENCES \"public\".\"tasks\"(\"id\") ON DELETE cascade ON UPDATE no action;"
+    ],
+    "bps": true,
+    "folderMillis": 1745156905171,
+    "hash": "fbcdae1de9022117b8fb6f9cee3d0e35a7620686d98f43840c17e9f20a31e041"
   }
 ]
