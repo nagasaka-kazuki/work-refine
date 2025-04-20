@@ -78,11 +78,7 @@ export async function importDiffData(file: File): Promise<void> {
   } catch {
     throw new Error('JSON のパースに失敗しました')
   }
-
-  // 日付を変換
   const typed = parseDates(raw)
-
-  // Zod による検証
   const {
     categories: cats,
     tasks: tks,
@@ -90,97 +86,63 @@ export async function importDiffData(file: File): Promise<void> {
     task_checks: checks,
   } = ImportPayloadSchema.parse(typed)
 
-  // カテゴリの差分登録
-  const nameToCatId = new Map<string, string>()
-  for (const cat of cats) {
-    nameToCatId.set(cat.name, cat.id)
-    const exist = await db
-      .select({ id: categories.id })
-      .from(categories)
-      .where(eq(categories.name, cat.name))
-    if (exist.length === 0) {
-      await db.insert(categories).values({ id: cat.id, name: cat.name })
-    }
-  }
-
-  // タスクの差分登録
-  const idToCatName = new Map(
-    cats.map((c) => [c.id, c.name] as [string, string])
-  )
-  const nameToTaskId = new Map<string, string>()
-  for (const tk of tks) {
-    const catName = idToCatName.get(tk.category_id)!
-    const catId = nameToCatId.get(catName)!
-    const exist = await db
-      .select({ id: tasks.id })
-      .from(tasks)
-      .where(and(eq(tasks.name, tk.name), eq(tasks.category_id, catId)))
-
-    const taskId = exist.length ? exist[0].id : uuidv4()
-    if (!exist.length) {
-      await db.insert(tasks).values({
-        id: taskId,
-        name: tk.name,
-        note: tk.note,
-        due_to: tk.due_to,
-        category_id: catId,
-      })
-    }
-    nameToTaskId.set(`${tk.name}::${catId}`, taskId)
-  }
-
-  // チェック項目の差分登録
-  const nameToItemId = new Map<string, string>()
-  for (const it of items) {
-    const catName = idToCatName.get(it.category_id!)!
-    const catId = nameToCatId.get(catName)!
-    const exist = await db
-      .select({ id: check_items.id })
-      .from(check_items)
-      .where(
-        and(eq(check_items.name, it.name), eq(check_items.category_id, catId))
-      )
-
-    const itemId = exist.length ? exist[0].id : uuidv4()
-    if (!exist.length) {
-      await db.insert(check_items).values({
-        id: itemId,
-        name: it.name,
-        sort_position: it.sort_position,
-        category_id: catId,
-      })
-    }
-    nameToItemId.set(`${it.name}::${catId}`, itemId)
-  }
-
-  // タスクチェックの差分登録
-  for (const ck of checks) {
-    const parent = tks.find((t) => t.id === ck.task_id)!
-    const catName = idToCatName.get(parent.category_id)!
-    const taskKey = `${parent.name}::${nameToCatId.get(catName)}`
-    const itemKey = `${items.find((i) => i.id === ck.check_item_id)!.name}::${nameToCatId.get(catName)}`
-
-    const taskId = nameToTaskId.get(taskKey)!
-    const itemId = nameToItemId.get(itemKey)!
-
-    const exist = await db
-      .select({ id: task_checks.id })
-      .from(task_checks)
-      .where(
-        and(
-          eq(task_checks.task_id, taskId),
-          eq(task_checks.check_item_id, itemId)
+  // トランザクション内で一括投入
+  await db.transaction(async (tx) => {
+    if (cats.length > 0) {
+      await tx
+        .insert(categories)
+        .values(
+          cats.map((c) => ({
+            id: c.id,
+            name: c.name,
+            created_at: c.created_at,
+            updated_at: c.updated_at,
+          }))
         )
-      )
-
-    if (!exist.length) {
-      await db.insert(task_checks).values({
-        id: uuidv4(),
-        task_id: taskId,
-        check_item_id: itemId,
-        is_done: ck.is_done,
-        sort_position: ck.sort_position,
-      })
     }
-  }
+    if (tks.length > 0) {
+      await tx
+        .insert(tasks)
+        .values(
+          tks.map((t) => ({
+            id: t.id ?? uuidv4(),
+            name: t.name,
+            note: t.note,
+            due_to: t.due_to,
+            category_id: t.category_id,
+            created_at: t.created_at,
+            updated_at: t.updated_at,
+          }))
+        )
+    }
+    if (items.length > 0) {
+      await tx
+        .insert(check_items)
+        .values(
+          items.map((i) => ({
+            id: i.id ?? uuidv4(),
+            name: i.name,
+            sort_position: i.sort_position,
+            category_id: i.category_id!,
+            created_at: i.created_at,
+            updated_at: i.updated_at,
+          }))
+        )
+    }
+    if (checks.length > 0) {
+      await tx
+        .insert(task_checks)
+        .values(
+          checks.map((tc) => ({
+            id: tc.id ?? uuidv4(),
+            task_id: tc.task_id,
+            check_item_id: tc.check_item_id,
+            is_done: tc.is_done,
+            sort_position: tc.sort_position,
+            created_at: tc.created_at,
+            updated_at: tc.updated_at,
+          }))
+        )
+    }
+  })
 }

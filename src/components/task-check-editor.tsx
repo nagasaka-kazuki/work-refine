@@ -4,7 +4,7 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import {  Trash2 } from 'lucide-react'
+import { Trash2 } from 'lucide-react'
 import { CheckItem, TaskCheck } from '@/db/schema'
 import { CheckItemRepository } from '@/lib/repositories/checkItems'
 import { CheckItemArea } from './check-item'
@@ -35,9 +35,10 @@ export function TaskOriginalCheckItemArea({
         <div className="space-y-1">
           {checks.map((check) => (
             <div key={check.id} className="flex items-center justify-between">
-              <CheckItemArea ci={check} tc={
-                taskChecks.find((tc) => tc.check_item_id === check.id)!
-              }/>
+              <CheckItemArea
+                ci={check}
+                tc={taskChecks.find((tc) => tc.check_item_id === check.id)!}
+              />
               <Button
                 variant="ghost"
                 size="icon"

@@ -144,12 +144,7 @@ export function TaskRow({
             ) : (
               categoryTaskChecks.map((tc) => {
                 const ci = getCheckItem(tc.check_item_id)
-                return ci ? (
-                  <CheckItemArea
-                    key={tc.id}
-                    tc={tc}
-                    ci={ci}/>
-                ) : null
+                return ci ? <CheckItemArea key={tc.id} tc={tc} ci={ci} /> : null
               })
             )}
           </div>
