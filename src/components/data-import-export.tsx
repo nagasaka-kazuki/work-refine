@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from '@/components/ui/dialog'
 import { Download, Upload, AlertCircle } from 'lucide-react'
 import { exportAllData, importDiffData } from '@/lib/data-sync'
@@ -88,13 +89,10 @@ export function DataImportExport() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>データのインポート</DialogTitle>
+            <DialogDescription>エクスポートしたJSONファイルを選択してください。現在のデータは一致しないもののみ追加されます。</DialogDescription>
           </DialogHeader>
 
           <div className="py-4">
-            <p className="mb-4 text-sm text-muted-foreground">
-              エクスポートしたJSONファイルを選択してください。現在のデータは一致しないもののみ追加されます。
-            </p>
-
             {importError && (
               <Alert variant="destructive" className="mb-4">
                 <AlertCircle className="h-4 w-4" />
