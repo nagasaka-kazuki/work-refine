@@ -11,7 +11,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { GripVertical, X, Plus, Trash2 } from 'lucide-react'
+import {  X, Plus, Trash2 } from 'lucide-react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,6 +22,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { DialogDescription } from '@radix-ui/react-dialog'
 
 interface CategoryModalProps {
   isOpen: boolean
@@ -44,7 +45,6 @@ export function CategoryModal({
   const [items, setItems] = useState<
     { id?: string; name: string; sort_position: number }[]
   >([])
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
 
   useEffect(() => {
     if (category) {
@@ -61,65 +61,58 @@ export function CategoryModal({
   }, [category, checkItems, isOpen])
 
   const handleAddItem = () => {
-    setItems([...items, { name: '', sort_position: items.length }])
+    setItems((prev) => [...prev, { name: '', sort_position: prev.length }])
   }
 
   const handleRemoveItem = (index: number) => {
-    const newItems = [...items]
-    newItems.splice(index, 1)
-    // Update sort positions
-    newItems.forEach((item, idx) => {
-      item.sort_position = idx
+    setItems((prev) => {
+      const arr = [...prev]
+      arr.splice(index, 1)
+      return arr.map((item, idx) => ({ ...item, sort_position: idx }))
     })
-    setItems(newItems)
   }
 
   const handleItemChange = (index: number, value: string) => {
-    const newItems = [...items]
-    newItems[index].name = value
-    setItems(newItems)
+    setItems((prev) => {
+      const arr = [...prev]
+      arr[index].name = value
+      return arr
+    })
   }
 
   const handleSave = () => {
     if (!name.trim()) return
-
-    // Filter out empty check items
     const validItems = items.filter((item) => item.name.trim() !== '')
-
     onSave({ id: category?.id, name }, validItems)
+    onClose()
   }
 
   const handleDelete = () => {
     if (category && onDelete) {
       onDelete(category.id)
-      setIsDeleteDialogOpen(false)
+      onClose()
     }
   }
 
-  // Move item up or down in the list
   const moveItem = (fromIndex: number, toIndex: number) => {
     if (toIndex < 0 || toIndex >= items.length) return
-
-    const newItems = [...items]
-    const [movedItem] = newItems.splice(fromIndex, 1)
-    newItems.splice(toIndex, 0, movedItem)
-
-    // Update sort positions
-    newItems.forEach((item, idx) => {
-      item.sort_position = idx
+    setItems((prev) => {
+      const arr = [...prev]
+      const [moved] = arr.splice(fromIndex, 1)
+      arr.splice(toIndex, 0, moved)
+      return arr.map((item, idx) => ({ ...item, sort_position: idx }))
     })
-
-    setItems(newItems)
   }
 
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
               {category ? 'カテゴリ編集' : 'カテゴリ追加'}
             </DialogTitle>
+            <DialogDescription className='sr-only'>カテゴリを編集するダイアログ</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
@@ -135,13 +128,9 @@ export function CategoryModal({
 
             <div className="space-y-2">
               <Label>チェック項目</Label>
-
               <div className="space-y-2">
                 {items.map((item, index) => (
                   <div key={index} className="flex items-center gap-2">
-                    <div className="cursor-move">
-                      <GripVertical className="h-5 w-5 text-muted-foreground" />
-                    </div>
 
                     <Input
                       value={item.name}
@@ -191,11 +180,11 @@ export function CategoryModal({
             </div>
           </div>
 
-          <DialogFooter className="flex items-center justify-between sm:justify-between">
+          <DialogFooter className="flex items-center justify-between">
             {category && onDelete && (
               <Button
                 variant="destructive"
-                onClick={() => setIsDeleteDialogOpen(true)}
+                onClick={handleDelete}
               >
                 <Trash2 className="h-4 w-4 mr-2" />
                 削除
@@ -212,29 +201,6 @@ export function CategoryModal({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      <AlertDialog
-        open={isDeleteDialogOpen}
-        onOpenChange={setIsDeleteDialogOpen}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>カテゴリを削除しますか？</AlertDialogTitle>
-            <AlertDialogDescription>
-              このカテゴリを削除すると、関連するすべてのタスクとチェック項目も削除されます。この操作は元に戻せません。
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={onClose}>キャンセル</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-destructive text-destructive-foreground"
-            >
-              削除する
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   )
 }

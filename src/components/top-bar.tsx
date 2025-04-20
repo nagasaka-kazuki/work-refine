@@ -15,20 +15,14 @@ interface TopBarProps {
   onAddTask: () => void
   sortBy: string
   onSortChange: (value: any) => void
-  onDataImported: () => void
 }
 
-export function TopBar({
-  onAddTask,
-  sortBy,
-  onSortChange,
-  onDataImported,
-}: TopBarProps) {
+export function TopBar({ onAddTask, sortBy, onSortChange }: TopBarProps) {
   return (
     <div className="border-b bg-background p-4 flex items-center justify-between">
       <div className="flex items-center gap-4">
         <h1 className="text-xl font-bold">タスク管理</h1>
-        <DataImportExport onDataImported={onDataImported} />
+        <DataImportExport />
       </div>
 
       <div className="flex items-center gap-4">

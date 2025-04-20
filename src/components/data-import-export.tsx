@@ -14,11 +14,7 @@ import { exportAllData, importDiffData } from '@/lib/data-sync'
 import { Alert, AlertDescription } from './ui/alert'
 import { toast } from 'sonner'
 
-interface DataImportExportProps {
-  onDataImported: () => void
-}
-
-export function DataImportExport({ onDataImported }: DataImportExportProps) {
+export function DataImportExport() {
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false)
   const [importError, setImportError] = useState<string | null>(null)
   const [isImporting, setIsImporting] = useState(false)
@@ -58,7 +54,6 @@ export function DataImportExport({ onDataImported }: DataImportExportProps) {
     try {
       await importDiffData(file)
       setIsImportDialogOpen(false)
-      onDataImported()
       toast.success('データのインポートが完了しました。')
     } catch (error) {
       console.error('データのインポートに失敗しました:', error)

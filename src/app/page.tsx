@@ -106,10 +106,6 @@ export default function Home({
     setIsTaskModalOpen(true)
   }
 
-  const handleDataImported = () => {
-    setupLiveSubscriptions()
-  }
-
   const handleSaveCategory = async (
     categoryData: any,
     checkItemsData: any[]
@@ -291,7 +287,6 @@ export default function Home({
         onAddTask={handleAddTask}
         sortBy={sortBy}
         onSortChange={setSortBy}
-        onDataImported={handleDataImported}
       />
 
       <div className="flex flex-1 overflow-hidden">
