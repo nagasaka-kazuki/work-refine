@@ -1,11 +1,17 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { GripVertical, X, Plus, Trash2 } from "lucide-react"
+import { useState, useEffect } from 'react'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { GripVertical, X, Plus, Trash2 } from 'lucide-react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,7 +21,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+} from '@/components/ui/alert-dialog'
 
 interface CategoryModalProps {
   isOpen: boolean
@@ -26,23 +32,36 @@ interface CategoryModalProps {
   checkItems: any[]
 }
 
-export function CategoryModal({ isOpen, onClose, onSave, onDelete, category, checkItems }: CategoryModalProps) {
-  const [name, setName] = useState("")
-  const [items, setItems] = useState<{ id?: string; name: string; sort_position: number }[]>([])
+export function CategoryModal({
+  isOpen,
+  onClose,
+  onSave,
+  onDelete,
+  category,
+  checkItems,
+}: CategoryModalProps) {
+  const [name, setName] = useState('')
+  const [items, setItems] = useState<
+    { id?: string; name: string; sort_position: number }[]
+  >([])
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
 
   useEffect(() => {
     if (category) {
       setName(category.name)
-      setItems(checkItems.length > 0 ? [...checkItems].sort((a, b) => a.sort_position - b.sort_position) : [])
+      setItems(
+        checkItems.length > 0
+          ? [...checkItems].sort((a, b) => a.sort_position - b.sort_position)
+          : []
+      )
     } else {
-      setName("")
-      setItems([{ name: "", sort_position: 0 }])
+      setName('')
+      setItems([{ name: '', sort_position: 0 }])
     }
   }, [category, checkItems, isOpen])
 
   const handleAddItem = () => {
-    setItems([...items, { name: "", sort_position: items.length }])
+    setItems([...items, { name: '', sort_position: items.length }])
   }
 
   const handleRemoveItem = (index: number) => {
@@ -65,7 +84,7 @@ export function CategoryModal({ isOpen, onClose, onSave, onDelete, category, che
     if (!name.trim()) return
 
     // Filter out empty check items
-    const validItems = items.filter((item) => item.name.trim() !== "")
+    const validItems = items.filter((item) => item.name.trim() !== '')
 
     onSave({ id: category?.id, name }, validItems)
   }
@@ -98,7 +117,9 @@ export function CategoryModal({ isOpen, onClose, onSave, onDelete, category, che
       <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{category ? "カテゴリ編集" : "カテゴリ追加"}</DialogTitle>
+            <DialogTitle>
+              {category ? 'カテゴリ編集' : 'カテゴリ追加'}
+            </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
@@ -146,14 +167,23 @@ export function CategoryModal({ isOpen, onClose, onSave, onDelete, category, che
                       >
                         ↓
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleRemoveItem(index)}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleRemoveItem(index)}
+                      >
                         <X className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
                 ))}
 
-                <Button variant="outline" size="sm" className="w-full" onClick={handleAddItem}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={handleAddItem}
+                >
                   <Plus className="h-4 w-4 mr-2" />
                   チェック項目を追加
                 </Button>
@@ -163,7 +193,10 @@ export function CategoryModal({ isOpen, onClose, onSave, onDelete, category, che
 
           <DialogFooter className="flex items-center justify-between sm:justify-between">
             {category && onDelete && (
-              <Button variant="destructive" onClick={() => setIsDeleteDialogOpen(true)}>
+              <Button
+                variant="destructive"
+                onClick={() => setIsDeleteDialogOpen(true)}
+              >
                 <Trash2 className="h-4 w-4 mr-2" />
                 削除
               </Button>
@@ -180,7 +213,10 @@ export function CategoryModal({ isOpen, onClose, onSave, onDelete, category, che
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>カテゴリを削除しますか？</AlertDialogTitle>
@@ -190,7 +226,10 @@ export function CategoryModal({ isOpen, onClose, onSave, onDelete, category, che
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={onClose}>キャンセル</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground"
+            >
               削除する
             </AlertDialogAction>
           </AlertDialogFooter>

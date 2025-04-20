@@ -87,8 +87,52 @@ export default function Home({ categoriesData, tasksData, checkItemsData, taskCh
           .set({ name: categoryData.name, updated_at: new Date() })
           .where(eq(categories.id, editingCategory.id))
 
+        // Get all tasks for this category before deleting check items
+        const categoryTasks = allTasks.filter((task) => task.category_id === editingCategory.id)
+
         // Delete existing check items for this category
         await db.delete(check_items).where(eq(check_items.category_id, editingCategory.id))
+
+        // Add new check items
+        const newCheckItems = []
+        for (let i = 0; i < checkItemsData.length; i++) {
+          const item = checkItemsData[i]
+          const checkItemId = uuidv4()
+
+          await db.insert(check_items).values({
+            id: checkItemId,
+            category_id: editingCategory.id,
+            name: item.name,
+            sort_position: i,
+            created_at: new Date(),
+            updated_at: new Date(),
+          })
+
+          newCheckItems.push({
+            id: checkItemId,
+            name: item.name,
+            sort_position: i,
+          })
+        }
+
+        // Update all existing tasks with new check items
+        for (const task of categoryTasks) {
+          // Delete existing task checks for this task
+          await db.delete(task_checks).where(eq(task_checks.task_id, task.id))
+
+          // Add new task checks for each new check item
+          for (const checkItem of newCheckItems) {
+            await db.insert(task_checks).values({
+              id: uuidv4(),
+              task_id: task.id,
+              check_item_id: checkItem.id,
+              is_done: false,
+              sort_position: checkItem.sort_position,
+              created_at: new Date(),
+              updated_at: new Date(),
+            })
+          }
+        }
       } else {
         // Create new category
         const categoryId = uuidv4()
@@ -100,19 +144,19 @@ export default function Home({ categoriesData, tasksData, checkItemsData, taskCh
         })
 
         categoryData.id = categoryId
-      }
 
-      // Add check items
-      for (let i = 0; i < checkItemsData.length; i++) {
-        const item = checkItemsData[i]
-        await db.insert(check_items).values({
-          id: uuidv4(),
-          category_id: editingCategory ? editingCategory.id : categoryData.id,
-          name: item.name,
-          sort_position: i,
-          created_at: new Date(),
-          updated_at: new Date(),
-        })
+        // Add check items for new category
+        for (let i = 0; i < checkItemsData.length; i++) {
+          const item = checkItemsData[i]
+          await db.insert(check_items).values({
+            id: uuidv4(),
+            category_id: categoryId,
+            name: item.name,
+            sort_position: i,
+            created_at: new Date(),
+            updated_at: new Date(),
+          })
+        }
       }
 
       setIsCategoryModalOpen(false)
@@ -149,7 +193,6 @@ export default function Home({ categoriesData, tasksData, checkItemsData, taskCh
         name: taskData.name,
         note: taskData.note || "",
         due_to: taskData.due_to ? new Date(taskData.due_to) : null,
-        status: "todo",
         created_at: new Date(),
         updated_at: new Date(),
       })
@@ -176,6 +219,19 @@ export default function Home({ categoriesData, tasksData, checkItemsData, taskCh
     }
   }
 
+  // Calculate task status for sorting
+  const getTaskStatus = (taskId: string) => {
+    const taskCheckItems = allTaskChecks.filter((check) => check.task_id === taskId)
+
+    if (taskCheckItems.length === 0) return "todo"
+
+    const completedChecks = taskCheckItems.filter((check) => check.is_done).length
+
+    if (completedChecks === 0) return "todo"
+    if (completedChecks === taskCheckItems.length) return "done"
+    return "doing"
+  }
+
   const filteredTasks = selectedCategory ? allTasks.filter((task) => task.category_id === selectedCategory) : allTasks
 
   return (
@@ -198,6 +254,7 @@ export default function Home({ categoriesData, tasksData, checkItemsData, taskCh
             checkItems={allCheckItems}
             taskChecks={allTaskChecks}
             sortBy={sortBy}
+            getTaskStatus={getTaskStatus}
           />
         </main>
       </div>
