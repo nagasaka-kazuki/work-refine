@@ -5,9 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { ChevronDown, ChevronRight } from 'lucide-react'
-import { db } from '@/lib/db-client'
-import { CheckItem, Task, task_checks, TaskCheck } from '@/db/schema'
-import { eq } from 'drizzle-orm'
+import { CheckItem, Task, TaskCheck } from '@/db/schema'
 import { cn } from '@/lib/utils'
 import { TaskOriginalCheckItemArea } from './task-check-editor'
 
@@ -20,6 +18,7 @@ interface TaskRowProps {
   getCheckItem: (id: string) => CheckItem | undefined
   onAddOriginalCheck: (taskId: string, name: string) => void
   onDeleteOriginalCheck: (checkItemId: string) => void
+  handleCheckToggle: (tcId: string, done: boolean) => Promise<void>
 }
 
 export function TaskRow({
@@ -31,6 +30,7 @@ export function TaskRow({
   getCheckItem,
   onAddOriginalCheck,
   onDeleteOriginalCheck,
+  handleCheckToggle,
 }: TaskRowProps) {
   // 1. ソート済みチェック全体
   const sortedTaskChecks:TaskCheck[] = [...taskChecks].sort(
@@ -85,18 +85,6 @@ export function TaskRow({
       hour: '2-digit',
       minute: '2-digit',
     }).format(d)
-
-  // 5. トグル
-  const handleCheckToggle = async (tcId: string, done: boolean) => {
-    try {
-      await db
-        .update(task_checks)
-        .set({ is_done: !done, updated_at: new Date() })
-        .where(eq(task_checks.id, tcId))
-    } catch (e) {
-      console.error(e)
-    }
-  }
 
   return (
     <Card className="overflow-hidden">

@@ -8,8 +8,10 @@ import { CategoryModal } from '@/components/category-modal'
 import { TaskModal } from '@/components/task-modal'
 import { categories, tasks, check_items, task_checks } from '@/db/schema'
 import { db, pgClient } from '@/lib/db-client'
-import { v4 as uuidv4 } from 'uuid'
-import { eq, inArray } from 'drizzle-orm'
+import { CategoryRepository } from '@/lib/repositories/categories'
+import { TaskRepository } from '@/lib/repositories/tasks'
+import { CheckItemRepository } from '@/lib/repositories/checkItems'
+import { TaskCheckRepository } from '@/lib/repositories/taskChecks'
 
 type Props = {
   categoriesData: (typeof categories.$inferSelect)[]
@@ -24,27 +26,16 @@ export default function Home({
   checkItemsData,
   taskChecksData,
 }: Props) {
-  // TODO :モーダルを閉じるときに、なんかレイヤー残ってるから。
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
-  const [sortBy, setSortBy] = useState<'due_to' | 'status' | 'created_at'>(
-    'due_to'
-  )
+  const [sortBy, setSortBy] = useState<'due_to' | 'status' | 'created_at'>('due_to')
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false)
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
-  const [editingCategory, setEditingCategory] = useState<
-    typeof categories.$inferSelect | null
-  >(null)
-  const [allCategories, setAllCategories] =
-    useState<(typeof categories.$inferSelect)[]>(categoriesData)
-  const [allTasks, setAllTasks] =
-    useState<(typeof tasks.$inferSelect)[]>(tasksData)
-  const [allCheckItems, setAllCheckItems] =
-    useState<(typeof check_items.$inferSelect)[]>(checkItemsData)
-  const [allTaskChecks, setAllTaskChecks] =
-    useState<(typeof task_checks.$inferSelect)[]>(taskChecksData)
-  const [liveSubscriptions, setLiveSubscriptions] = useState<
-    Array<() => Promise<void>>
-  >([])
+  const [editingCategory, setEditingCategory] = useState<typeof categories.$inferSelect | null>(null)
+  const [allCategories, setAllCategories] = useState(categoriesData)
+  const [allTasks, setAllTasks] = useState(tasksData)
+  const [allCheckItems, setAllCheckItems] = useState(checkItemsData)
+  const [allTaskChecks, setAllTaskChecks] = useState(taskChecksData)
+  const [liveSubscriptions, setLiveSubscriptions] = useState<Array<() => Promise<void>>>([])
 
   const setupLiveSubscriptions = async () => {
     // 既存の購読をクリーンアップ
@@ -83,12 +74,8 @@ export default function Home({
 
   useEffect(() => {
     setupLiveSubscriptions()
-
     return () => {
-      // クリーンアップ
-      liveSubscriptions.forEach((unsub) => {
-        unsub()
-      })
+      liveSubscriptions.forEach(unsub => unsub())
     }
   }, [])
 
@@ -106,97 +93,18 @@ export default function Home({
     setIsTaskModalOpen(true)
   }
 
-  const handleSaveCategory = async (
-    categoryData: any,
-    checkItemsData: any[]
-  ) => {
+  const handleSaveCategory = async (categoryData: any, checkItemsData: any[]) => {
     try {
+      const names = checkItemsData.map(item => item.name)
       if (editingCategory) {
-        // Update existing category
-        await db
-          .update(categories)
-          .set({ name: categoryData.name, updated_at: new Date() })
-          .where(eq(categories.id, editingCategory.id))
-
-        // Get all tasks for this category before deleting check items
-        const categoryTasks = allTasks.filter(
-          (task) => task.category_id === editingCategory.id
+        await CategoryRepository.updateWithChecks(
+          editingCategory.id,
+          categoryData.name,
+          names,
         )
-
-        // Delete existing check items for this category
-        await db
-          .delete(check_items)
-          .where(eq(check_items.category_id, editingCategory.id))
-
-        // Add new check items (バルク処理)
-        const newCheckItems = checkItemsData.map((item, i) => {
-          const checkItemId = uuidv4()
-          return {
-            id: checkItemId,
-            category_id: editingCategory.id,
-            name: item.name,
-            sort_position: i,
-            created_at: new Date(),
-            updated_at: new Date(),
-          }
-        })
-
-        if (newCheckItems.length > 0) {
-          await db.insert(check_items).values(newCheckItems)
-        }
-
-        // Update all existing tasks with new check items (バルク処理)
-        if (categoryTasks.length > 0) {
-          // まず、すべてのタスクIDに対して一括で削除
-          const taskIds = categoryTasks.map((task) => task.id)
-          await db
-            .delete(task_checks)
-            .where(inArray(task_checks.task_id, taskIds))
-
-          // 次に、すべてのタスクとチェック項目の組み合わせを作成して一括挿入
-          const allTaskChecks = categoryTasks.flatMap((task) =>
-            newCheckItems.map((checkItem) => ({
-              id: uuidv4(),
-              task_id: task.id,
-              check_item_id: checkItem.id,
-              is_done: false,
-              sort_position: checkItem.sort_position,
-              created_at: new Date(),
-              updated_at: new Date(),
-            }))
-          )
-
-          if (allTaskChecks.length > 0) {
-            await db.insert(task_checks).values(allTaskChecks)
-          }
-        }
       } else {
-        // Create new category
-        const categoryId = uuidv4()
-        await db.insert(categories).values({
-          id: categoryId,
-          name: categoryData.name,
-          created_at: new Date(),
-          updated_at: new Date(),
-        })
-
-        categoryData.id = categoryId
-
-        // Add check items for new category (バルク処理)
-        const newCheckItems = checkItemsData.map((item, i) => ({
-          id: uuidv4(),
-          category_id: categoryId,
-          name: item.name,
-          sort_position: i,
-          created_at: new Date(),
-          updated_at: new Date(),
-        }))
-
-        if (newCheckItems.length > 0) {
-          await db.insert(check_items).values(newCheckItems)
-        }
+        await CategoryRepository.create(categoryData.name, names)
       }
-
       setIsCategoryModalOpen(false)
     } catch (error) {
       console.error('Error saving category:', error)
@@ -205,15 +113,8 @@ export default function Home({
 
   const handleDeleteCategory = async (categoryId: string) => {
     try {
-      // カテゴリを削除すると、関連するタスク、チェック項目、タスクチェックは
-      // カスケード削除されるため、カテゴリのみを削除すれば良い
-      await db.delete(categories).where(eq(categories.id, categoryId))
-
-      // カテゴリが削除されたら、選択中のカテゴリをリセット
-      if (selectedCategory === categoryId) {
-        setSelectedCategory(null)
-      }
-
+      await CategoryRepository.delete(categoryId)
+      if (selectedCategory === categoryId) setSelectedCategory(null)
       setIsCategoryModalOpen(false)
     } catch (error) {
       console.error('Error deleting category:', error)
@@ -222,38 +123,7 @@ export default function Home({
 
   const handleSaveTask = async (taskData: any) => {
     try {
-      const taskId = uuidv4()
-
-      // Insert task
-      await db.insert(tasks).values({
-        id: taskId,
-        category_id: taskData.category_id,
-        name: taskData.name,
-        note: taskData.note || '',
-        due_to: taskData.due_to ? new Date(taskData.due_to) : null,
-        created_at: new Date(),
-        updated_at: new Date(),
-      })
-
-      // Insert task checks for each check item in the category (バルク処理)
-      const categoryCheckItems = allCheckItems.filter(
-        (item) => item.category_id === taskData.category_id
-      )
-
-      const taskChecksToInsert = categoryCheckItems.map((checkItem) => ({
-        id: uuidv4(),
-        task_id: taskId,
-        check_item_id: checkItem.id,
-        is_done: false,
-        sort_position: checkItem.sort_position,
-        created_at: new Date(),
-        updated_at: new Date(),
-      }))
-
-      if (taskChecksToInsert.length > 0) {
-        await db.insert(task_checks).values(taskChecksToInsert)
-      }
-
+      await TaskRepository.createWithChecks(taskData)
       setIsTaskModalOpen(false)
     } catch (error) {
       console.error('Error saving task:', error)
@@ -262,78 +132,44 @@ export default function Home({
 
   const handleAddOriginalCheck = async (taskId: string, name: string) => {
     try {
-      // 既存タスク固有チェック項目数を取得しソート位置に利用
-      const existing = allCheckItems.filter((item) => item.task_id === taskId)
-      const position = existing.length
-      const checkItemId = uuidv4()
-      console.log('name', name)
-
-      // check_items テーブルに挿入
-      await db.insert(check_items).values({
-        id: checkItemId,
-        task_id: taskId,
-        name,
-        sort_position: position,
-        created_at: new Date(),
-        updated_at: new Date(),
-      })
-
-      // task_checks テーブルに紐付けレコードを挿入
-      await db.insert(task_checks).values({
-        id: uuidv4(),
-        task_id: taskId,
-        check_item_id: checkItemId,
-        is_done: false,
-        sort_position: position,
-        created_at: new Date(),
-        updated_at: new Date(),
-      })
+      await CheckItemRepository.createForTask(taskId, name)
     } catch (error) {
       console.error('Error adding task-specific check item:', error)
     }
   }
 
-  /**
-   * タスク固有チェック項目を削除
-   */
   const handleDeleteOriginalCheck = async (checkItemId: string) => {
     try {
-      // check_items を削除すると、task_checks は ON DELETE CASCADE により自動削除
-      await db.delete(check_items).where(eq(check_items.id, checkItemId))
+      await CheckItemRepository.deleteById(checkItemId)
     } catch (error) {
       console.error('Error deleting task-specific check item:', error)
     }
   }
 
-  // Calculate task status for sorting
+  const handleCheckToggle = async (tcId: string, done: boolean) => {
+    try {
+      await TaskCheckRepository.toggleStatus(tcId, !done)
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
   const getTaskStatus = (taskId: string) => {
-    const taskCheckItems = allTaskChecks.filter(
-      (check) => check.task_id === taskId
-    )
-
-    if (taskCheckItems.length === 0) return 'todo'
-
-    const completedChecks = taskCheckItems.filter(
-      (check) => check.is_done
-    ).length
-
-    if (completedChecks === 0) return 'todo'
-    if (completedChecks === taskCheckItems.length) return 'done'
+    const checks = allTaskChecks.filter(c => c.task_id === taskId)
+    if (checks.length === 0) return 'todo'
+    const completed = checks.filter(c => c.is_done).length
+    if (completed === 0) return 'todo'
+    if (completed === checks.length) return 'done'
     return 'doing'
   }
 
   const filteredTasks = selectedCategory
-    ? allTasks.filter((task) => task.category_id === selectedCategory)
+    ? allTasks.filter(t => t.category_id === selectedCategory)
     : allTasks
 
   return (
     <div className="flex h-screen flex-col">
-      <TopBar
-        onAddTask={handleAddTask}
-        sortBy={sortBy}
-        onSortChange={setSortBy}
-      />
-
+      <TopBar onAddTask={handleAddTask} sortBy={sortBy} onSortChange={setSortBy} />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar
           categories={allCategories}
@@ -342,7 +178,6 @@ export default function Home({
           onAddCategory={handleAddCategory}
           onEditCategory={handleEditCategory}
         />
-
         <main className="flex-1 overflow-auto p-4">
           <TaskList
             tasks={filteredTasks}
@@ -351,13 +186,12 @@ export default function Home({
             taskChecks={allTaskChecks}
             sortBy={sortBy}
             getTaskStatus={getTaskStatus}
-            // 追加: タスク固有チェック編集ハンドラ
             onAddOriginalCheck={handleAddOriginalCheck}
             onDeleteOriginalCheck={handleDeleteOriginalCheck}
+            handleCheckToggle={handleCheckToggle}
           />
         </main>
       </div>
-
       <CategoryModal
         isOpen={isCategoryModalOpen}
         onClose={() => setIsCategoryModalOpen(false)}
@@ -366,13 +200,10 @@ export default function Home({
         category={editingCategory}
         checkItems={
           editingCategory
-            ? allCheckItems.filter(
-                (item) => item.category_id === editingCategory.id
-              )
+            ? allCheckItems.filter(item => item.category_id === editingCategory.id)
             : []
         }
       />
-
       <TaskModal
         isOpen={isTaskModalOpen}
         onClose={() => setIsTaskModalOpen(false)}
