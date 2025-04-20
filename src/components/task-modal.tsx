@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -31,19 +31,38 @@ export function TaskModal({
   onSave,
   categories,
 }: TaskModalProps) {
+  // ローカル日時を "YYYY-MM-DDThh:mm" 形式で取得
+  const getLocalDatetime = () => {
+    const now = new Date()
+    const pad = (n: number) => n.toString().padStart(2, '0')
+    const year = now.getFullYear()
+    const month = pad(now.getMonth() + 1)
+    const day = pad(now.getDate())
+    const hours = pad(now.getHours())
+    const minutes = pad(now.getMinutes())
+    return `${year}-${month}-${day}T${hours}:${minutes}`
+  }
+
   const [name, setName] = useState('')
   const [categoryId, setCategoryId] = useState('')
   const [note, setNote] = useState('')
-  const [dueDate, setDueDate] = useState('')
-  const [dueTime, setDueTime] = useState('')
+  // datetime-local 用のステート
+  const [dueTo, setDueTo] = useState<string>(getLocalDatetime())
 
+  // フォームのリセット
   const resetForm = () => {
     setName('')
     setCategoryId('')
     setNote('')
-    setDueDate('')
-    setDueTime('')
+    setDueTo(getLocalDatetime())
   }
+
+  // モーダルが開かれたときにフォーム初期化
+  useEffect(() => {
+    if (isOpen) {
+      resetForm()
+    }
+  }, [isOpen])
 
   const handleClose = () => {
     resetForm()
@@ -53,19 +72,17 @@ export function TaskModal({
   const handleSave = () => {
     if (!name.trim() || !categoryId) return
 
-    let dueTo = null
-    if (dueDate) {
-      dueTo = new Date(`${dueDate}T${dueTime || '00:00'}`)
-    }
+    const dueToDate = dueTo ? new Date(dueTo) : null
 
     onSave({
       name,
       category_id: categoryId,
       note,
-      due_to: dueTo,
+      due_to: dueToDate,
     })
 
     resetForm()
+    onClose()
   }
 
   return (
@@ -113,26 +130,14 @@ export function TaskModal({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="due-date">期日</Label>
-              <Input
-                id="due-date"
-                type="date"
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="due-time">時間</Label>
-              <Input
-                id="due-time"
-                type="time"
-                value={dueTime}
-                onChange={(e) => setDueTime(e.target.value)}
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="due-to">期日</Label>
+            <Input
+              id="due-to"
+              type="datetime-local"
+              value={dueTo}
+              onChange={(e) => setDueTo(e.target.value)}
+            />
           </div>
         </div>
 
