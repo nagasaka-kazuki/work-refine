@@ -7,9 +7,9 @@ import { TopBar } from "@/components/top-bar"
 import { CategoryModal } from "@/components/category-modal"
 import { TaskModal } from "@/components/task-modal"
 import { categories, tasks, check_items, task_checks } from "@/db/schema"
-import { eq } from "drizzle-orm"
-import { v4 as uuidv4 } from "uuid"
 import { db, pgClient } from "@/lib/db-client"
+import { v4 as uuidv4 } from "uuid"
+import { eq, inArray } from "drizzle-orm"
 
 type Props = {
   categoriesData: (typeof categories.$inferSelect)[]
@@ -93,36 +93,32 @@ export default function Home({ categoriesData, tasksData, checkItemsData, taskCh
         // Delete existing check items for this category
         await db.delete(check_items).where(eq(check_items.category_id, editingCategory.id))
 
-        // Add new check items
-        const newCheckItems = []
-        for (let i = 0; i < checkItemsData.length; i++) {
-          const item = checkItemsData[i]
+        // Add new check items (バルク処理)
+        const newCheckItems = checkItemsData.map((item, i) => {
           const checkItemId = uuidv4()
-
-          await db.insert(check_items).values({
+          return {
             id: checkItemId,
             category_id: editingCategory.id,
             name: item.name,
             sort_position: i,
             created_at: new Date(),
             updated_at: new Date(),
-          })
+          }
+        })
 
-          newCheckItems.push({
-            id: checkItemId,
-            name: item.name,
-            sort_position: i,
-          })
+        if (newCheckItems.length > 0) {
+          await db.insert(check_items).values(newCheckItems)
         }
 
-        // Update all existing tasks with new check items
-        for (const task of categoryTasks) {
-          // Delete existing task checks for this task
-          await db.delete(task_checks).where(eq(task_checks.task_id, task.id))
+        // Update all existing tasks with new check items (バルク処理)
+        if (categoryTasks.length > 0) {
+          // まず、すべてのタスクIDに対して一括で削除
+          const taskIds = categoryTasks.map((task) => task.id)
+          await db.delete(task_checks).where(inArray(task_checks.task_id, taskIds))
 
-          // Add new task checks for each new check item
-          for (const checkItem of newCheckItems) {
-            await db.insert(task_checks).values({
+          // 次に、すべてのタスクとチェック項目の組み合わせを作成して一括挿入
+          const allTaskChecks = categoryTasks.flatMap((task) =>
+            newCheckItems.map((checkItem) => ({
               id: uuidv4(),
               task_id: task.id,
               check_item_id: checkItem.id,
@@ -130,7 +126,11 @@ export default function Home({ categoriesData, tasksData, checkItemsData, taskCh
               sort_position: checkItem.sort_position,
               created_at: new Date(),
               updated_at: new Date(),
-            })
+            })),
+          )
+
+          if (allTaskChecks.length > 0) {
+            await db.insert(task_checks).values(allTaskChecks)
           }
         }
       } else {
@@ -145,17 +145,18 @@ export default function Home({ categoriesData, tasksData, checkItemsData, taskCh
 
         categoryData.id = categoryId
 
-        // Add check items for new category
-        for (let i = 0; i < checkItemsData.length; i++) {
-          const item = checkItemsData[i]
-          await db.insert(check_items).values({
-            id: uuidv4(),
-            category_id: categoryId,
-            name: item.name,
-            sort_position: i,
-            created_at: new Date(),
-            updated_at: new Date(),
-          })
+        // Add check items for new category (バルク処理)
+        const newCheckItems = checkItemsData.map((item, i) => ({
+          id: uuidv4(),
+          category_id: categoryId,
+          name: item.name,
+          sort_position: i,
+          created_at: new Date(),
+          updated_at: new Date(),
+        }))
+
+        if (newCheckItems.length > 0) {
+          await db.insert(check_items).values(newCheckItems)
         }
       }
 
@@ -197,20 +198,21 @@ export default function Home({ categoriesData, tasksData, checkItemsData, taskCh
         updated_at: new Date(),
       })
 
-      // Insert task checks for each check item in the category
+      // Insert task checks for each check item in the category (バルク処理)
       const categoryCheckItems = allCheckItems.filter((item) => item.category_id === taskData.category_id)
 
-      for (let i = 0; i < categoryCheckItems.length; i++) {
-        const checkItem = categoryCheckItems[i]
-        await db.insert(task_checks).values({
-          id: uuidv4(),
-          task_id: taskId,
-          check_item_id: checkItem.id,
-          is_done: false,
-          sort_position: checkItem.sort_position,
-          created_at: new Date(),
-          updated_at: new Date(),
-        })
+      const taskChecksToInsert = categoryCheckItems.map((checkItem) => ({
+        id: uuidv4(),
+        task_id: taskId,
+        check_item_id: checkItem.id,
+        is_done: false,
+        sort_position: checkItem.sort_position,
+        created_at: new Date(),
+        updated_at: new Date(),
+      }))
+
+      if (taskChecksToInsert.length > 0) {
+        await db.insert(task_checks).values(taskChecksToInsert)
       }
 
       setIsTaskModalOpen(false)
