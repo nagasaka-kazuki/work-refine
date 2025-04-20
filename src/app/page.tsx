@@ -4,61 +4,85 @@ import { Sidebar } from "@/components/sidebar"
 import { TopBar } from "@/components/top-bar"
 import { CategoryModal } from "@/components/category-modal"
 import { TaskModal } from "@/components/task-modal"
-import { db } from "@/lib/db"
-import { categories, tasks, check_items, task_checks } from "@/lib/schema"
+import { categories, tasks, check_items, task_checks } from "@/db/schema"
 import { eq } from "drizzle-orm"
 import { v4 as uuidv4 } from "uuid"
+import { db, pgClient } from "@/lib/db-client"
 
-export default function Home() {
+type Props ={
+  categoriesData: typeof categories.$inferSelect[]
+  tasksData: typeof tasks.$inferSelect[]
+  checkItemsData: typeof check_items.$inferSelect[]
+  taskChecksData: typeof task_checks.$inferSelect[]
+}
+
+export  function Home({
+  categoriesData,
+  tasksData,
+  checkItemsData,
+  taskChecksData,
+}:Props) {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
-  const [sortBy, setSortBy] = useState<"due_to" | "status" | "created_at">("due_to")
+  const [sortBy, setSortBy] = useState<'due_to' | 'status' | 'created_at'>('due_to')
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false)
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
-  const [editingCategory, setEditingCategory] = useState<any>(null)
-  const [allCategories, setAllCategories] = useState<any[]>([])
-  const [allTasks, setAllTasks] = useState<any[]>([])
-  const [allCheckItems, setAllCheckItems] = useState<any[]>([])
-  const [allTaskChecks, setAllTaskChecks] = useState<any[]>([])
+  const [editingCategory, setEditingCategory] = useState<typeof categories.$inferSelect | null>(null)
+  const [allCategories, setAllCategories] = useState<typeof categories.$inferSelect[]>(categoriesData)
+  const [allTasks, setAllTasks] = useState<typeof tasks.$inferSelect[]>(tasksData)
+  const [allCheckItems, setAllCheckItems] = useState<typeof check_items.$inferSelect[]>(checkItemsData)
+  const [allTaskChecks, setAllTaskChecks] = useState<typeof task_checks.$inferSelect[]>(taskChecksData)
 
-  // Load initial data
   useEffect(() => {
-    const loadData = async () => {
-      const categoriesData = await db.select().from(categories)
-      const tasksData = await db.select().from(tasks)
-      const checkItemsData = await db.select().from(check_items)
-      const taskChecksData = await db.select().from(task_checks)
+    // unsubscribe 関数を格納する配列
+    let unsubscribers: Array<() => Promise<void>> = []
 
-      setAllCategories(categoriesData)
-      setAllTasks(tasksData)
-      setAllCheckItems(checkItemsData)
-      setAllTaskChecks(taskChecksData)
+    // 非同期に初期ロードとライブ購読をまとめてセットアップ
+    async function setupLiveAndLoad() {
+
+      // 2) ライブクエリ購読（Promise なので await が必要）
+      const [catLive, taskLive, itemLive, checkLive] = await Promise.all([
+        pgClient.live.query(
+          db.select().from(categories).toSQL().sql,
+          [],
+          res => setAllCategories((res as any).rows ?? res),
+        ),
+        pgClient.live.query(
+          db.select().from(tasks).toSQL().sql,
+          [],
+          res => setAllTasks((res as any).rows ?? res),
+        ),
+        pgClient.live.query(
+          db.select().from(check_items).toSQL().sql,
+          [],
+          res => setAllCheckItems((res as any).rows ?? res),
+        ),
+        pgClient.live.query(
+          db.select().from(task_checks).toSQL().sql,
+          [],
+          res => setAllTaskChecks((res as any).rows ?? res),
+        ),
+      ])
+
+      // unsubscribe の参照を保存
+      unsubscribers = [
+        catLive.unsubscribe,
+        taskLive.unsubscribe,
+        itemLive.unsubscribe,
+        checkLive.unsubscribe,
+      ]
     }
 
-    loadData()
+    setupLiveAndLoad()
 
-    // Set up live queries
-    const setupLiveQueries = async () => {
-      const categoriesSub = db.client.live(db.select().from(categories), (data) => setAllCategories(data))
-
-      const tasksSub = db.client.live(db.select().from(tasks), (data) => setAllTasks(data))
-
-      const checkItemsSub = db.client.live(db.select().from(check_items), (data) => setAllCheckItems(data))
-
-      const taskChecksSub = db.client.live(db.select().from(task_checks), (data) => setAllTaskChecks(data))
-
-      return () => {
-        categoriesSub.unsubscribe()
-        tasksSub.unsubscribe()
-        checkItemsSub.unsubscribe()
-        taskChecksSub.unsubscribe()
-      }
-    }
-
-    const unsubscribe = setupLiveQueries()
+    // クリーンアップでは保存した unsubscribe をすべて実行
     return () => {
-      if (unsubscribe) unsubscribe()
+      unsubscribers.forEach(unsub => {
+        // 非同期関数ですが、戻り値は無視してOK
+        unsub()
+      })
     }
   }, [])
+
 
   const handleAddCategory = () => {
     setEditingCategory(null)
