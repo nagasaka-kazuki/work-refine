@@ -3,4 +3,4 @@ import { writeFileSync } from 'fs'
 const migrations = readMigrationFiles({
   migrationsFolder: './src/db/migrations',
 })
-writeFileSync('./src/assets/migrations.json', JSON.stringify(migrations))
+writeFileSync('./src/db/migration.json', JSON.stringify(migrations))

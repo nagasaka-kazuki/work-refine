@@ -15,4 +15,13 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['@electric-sql/pglite'],
   },
+  worker: {
+    format: 'es',
+  },
+  build: {
+    target: 'esnext', // ←これ
+  },
+  esbuild: {
+    target: 'esnext', // ←これ
+  },
 })

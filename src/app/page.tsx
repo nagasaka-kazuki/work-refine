@@ -6,18 +6,25 @@ import { Sidebar } from '@/components/sidebar'
 import { TopBar } from '@/components/top-bar'
 import { CategoryModal } from '@/components/category-modal'
 import { TaskModal } from '@/components/task-modal'
-import { categories, tasks, check_items, task_checks } from '@/db/schema'
+import {
+  categories,
+  tasks,
+  check_items,
+  task_checks,
+  Category,
+  Task,
+  CheckItem,
+  TaskCheck,
+} from '@/db/schema'
 import { db, pgClient } from '@/lib/db-client'
 import { CategoryRepository } from '@/lib/repositories/categories'
 import { TaskRepository } from '@/lib/repositories/tasks'
-import { CheckItemRepository } from '@/lib/repositories/checkItems'
-import { TaskCheckRepository } from '@/lib/repositories/taskChecks'
 
 type Props = {
-  categoriesData: (typeof categories.$inferSelect)[]
-  tasksData: (typeof tasks.$inferSelect)[]
-  checkItemsData: (typeof check_items.$inferSelect)[]
-  taskChecksData: (typeof task_checks.$inferSelect)[]
+  categoriesData: Category[]
+  tasksData: Task[]
+  checkItemsData: CheckItem[]
+  taskChecksData: TaskCheck[]
 }
 
 export default function Home({

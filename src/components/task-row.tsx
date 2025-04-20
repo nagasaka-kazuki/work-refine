@@ -3,12 +3,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import { Checkbox } from '@/components/ui/checkbox'
 import { ChevronDown, ChevronRight } from 'lucide-react'
 import { CheckItem, Task, TaskCheck } from '@/db/schema'
-import { cn } from '@/lib/utils'
 import { TaskOriginalCheckItemArea } from './task-check-editor'
-import { TaskCheckRepository } from '@/lib/repositories/taskChecks'
 import { CheckItemArea } from './check-item'
 
 interface TaskRowProps {
