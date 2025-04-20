@@ -1,7 +1,9 @@
-import { Button } from '@/components/ui/button'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { PlusCircle, Settings } from 'lucide-react'
-import { cn } from '@/lib/utils'
+"use client"
+
+import { Button } from "@/components/ui/button"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { PlusCircle, Settings } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 interface SidebarProps {
   categories: any[]
@@ -31,32 +33,32 @@ export function Sidebar({
         <div className="p-2">
           <Button
             variant="ghost"
-            className={cn(
-              'w-full justify-start mb-1 font-normal',
-              selectedCategory === null && 'bg-accent'
-            )}
+            className={cn("w-full justify-start mb-1 font-normal", selectedCategory === null && "bg-accent")}
             onClick={() => onSelectCategory(null)}
           >
             すべてのタスク
           </Button>
 
           {categories.map((category) => (
-            <div key={category.id} className="flex items-center group">
+            <div key={category.id} className="flex items-center justify-between mb-1 group">
               <Button
                 variant="ghost"
                 className={cn(
-                  'w-full justify-start mb-1 font-normal',
-                  selectedCategory === category.id && 'bg-accent'
+                  "flex-1 justify-start font-normal truncate",
+                  selectedCategory === category.id && "bg-accent",
                 )}
                 onClick={() => onSelectCategory(category.id)}
               >
-                {category.name}
+                <span className="truncate">{category.name}</span>
               </Button>
               <Button
                 variant="ghost"
                 size="icon"
-                className="opacity-0 group-hover:opacity-100 transition-opacity"
-                onClick={() => onEditCategory(category)}
+                className="group-hover:opacity-100 transition-opacity ml-1 flex-shrink-0"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onEditCategory(category)
+                }}
               >
                 <Settings className="h-4 w-4" />
               </Button>
