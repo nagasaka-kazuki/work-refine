@@ -1,12 +1,12 @@
-import { useState } from "react"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
-import { Checkbox } from "@/components/ui/checkbox"
-import { ChevronDown, ChevronRight } from "lucide-react"
-import { db } from "@/lib/db-client"
-import { tasks, task_checks } from "@/db/schema"
-import { eq } from "drizzle-orm"
-import { cn } from "@/lib/utils"
+import { useState } from 'react'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
+import { ChevronDown, ChevronRight } from 'lucide-react'
+import { db } from '@/lib/db-client'
+import { tasks, task_checks } from '@/db/schema'
+import { eq } from 'drizzle-orm'
+import { cn } from '@/lib/utils'
 
 interface TaskRowProps {
   task: any
@@ -17,8 +17,15 @@ interface TaskRowProps {
   getCheckItem: (id: string) => any
 }
 
-export function TaskRow({ task, categoryName, isExpanded, onToggleExpand, taskChecks, getCheckItem }: TaskRowProps) {
-  const [status, setStatus] = useState<"todo" | "doing" | "done">(task.status)
+export function TaskRow({
+  task,
+  categoryName,
+  isExpanded,
+  onToggleExpand,
+  taskChecks,
+  getCheckItem,
+}: TaskRowProps) {
+  const [status, setStatus] = useState<'todo' | 'doing' | 'done'>(task.status)
 
   // Calculate if task is due soon or overdue
   const now = new Date()
@@ -26,21 +33,22 @@ export function TaskRow({ task, categoryName, isExpanded, onToggleExpand, taskCh
   const tomorrow = new Date(now)
   tomorrow.setDate(tomorrow.getDate() + 1)
 
-  const isDueSoon = dueDate && dueDate > now && dueDate < tomorrow && status !== "done"
-  const isOverdue = dueDate && dueDate < now && status !== "done"
+  const isDueSoon =
+    dueDate && dueDate > now && dueDate < tomorrow && status !== 'done'
+  const isOverdue = dueDate && dueDate < now && status !== 'done'
 
   // Format due date
   const formatDueDate = (date: Date) => {
-    return new Intl.DateTimeFormat("ja-JP", {
-      month: "numeric",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
+    return new Intl.DateTimeFormat('ja-JP', {
+      month: 'numeric',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
     }).format(date)
   }
 
   // Handle status change
-  const handleStatusChange = async (newStatus: "todo" | "doing" | "done") => {
+  const handleStatusChange = async (newStatus: 'todo' | 'doing' | 'done') => {
     try {
       await db
         .update(tasks)
@@ -52,12 +60,15 @@ export function TaskRow({ task, categoryName, isExpanded, onToggleExpand, taskCh
 
       setStatus(newStatus)
     } catch (error) {
-      console.error("Error updating task status:", error)
+      console.error('Error updating task status:', error)
     }
   }
 
   // Handle check item toggle
-  const handleCheckToggle = async (taskCheckId: string, currentValue: boolean) => {
+  const handleCheckToggle = async (
+    taskCheckId: string,
+    currentValue: boolean
+  ) => {
     try {
       await db
         .update(task_checks)
@@ -67,18 +78,27 @@ export function TaskRow({ task, categoryName, isExpanded, onToggleExpand, taskCh
         })
         .where(eq(task_checks.id, taskCheckId))
     } catch (error) {
-      console.error("Error updating check item:", error)
+      console.error('Error updating check item:', error)
     }
   }
 
   // Sort task checks by sort_position
-  const sortedTaskChecks = [...taskChecks].sort((a, b) => a.sort_position - b.sort_position)
+  const sortedTaskChecks = [...taskChecks].sort(
+    (a, b) => a.sort_position - b.sort_position
+  )
 
   return (
     <Card className="overflow-hidden">
-      <div className="p-4 flex items-center cursor-pointer hover:bg-accent/50" onClick={onToggleExpand}>
+      <div
+        className="p-4 flex items-center cursor-pointer hover:bg-accent/50"
+        onClick={onToggleExpand}
+      >
         <div className="mr-2">
-          {isExpanded ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
+          {isExpanded ? (
+            <ChevronDown className="h-5 w-5" />
+          ) : (
+            <ChevronRight className="h-5 w-5" />
+          )}
         </div>
 
         <div className="flex-1 flex items-center justify-between">
@@ -91,25 +111,44 @@ export function TaskRow({ task, categoryName, isExpanded, onToggleExpand, taskCh
 
           <div className="flex items-center gap-2">
             {dueDate && (
-              <Badge variant={isOverdue ? "destructive" : isDueSoon ? "warning" : "outline"}>
+              <Badge
+                variant={
+                  isOverdue ? 'destructive' : isDueSoon ? 'warning' : 'outline'
+                }
+              >
                 {formatDueDate(dueDate)}
               </Badge>
             )}
 
             <Badge
-              variant={status === "done" ? "success" : status === "doing" ? "secondary" : "default"}
+              variant={
+                status === 'done'
+                  ? 'success'
+                  : status === 'doing'
+                    ? 'secondary'
+                    : 'default'
+              }
               className="cursor-pointer"
               onClick={(e) => {
                 e.stopPropagation()
-                const nextStatus: "todo" | "doing" | "done" = ( {
-                  todo: "doing",
-                  doing: "done",
-                  done: "todo",
-                } as Record<"todo" | "doing" | "done", "todo" | "doing" | "done"> )[status]
+                const nextStatus: 'todo' | 'doing' | 'done' = (
+                  {
+                    todo: 'doing',
+                    doing: 'done',
+                    done: 'todo',
+                  } as Record<
+                    'todo' | 'doing' | 'done',
+                    'todo' | 'doing' | 'done'
+                  >
+                )[status]
                 handleStatusChange(nextStatus)
               }}
             >
-              {status === "todo" ? "未着手" : status === "doing" ? "進行中" : "完了"}
+              {status === 'todo'
+                ? '未着手'
+                : status === 'doing'
+                  ? '進行中'
+                  : '完了'}
             </Badge>
           </div>
         </div>
@@ -117,12 +156,18 @@ export function TaskRow({ task, categoryName, isExpanded, onToggleExpand, taskCh
 
       {isExpanded && (
         <CardContent className="pt-0 pb-4">
-          {task.note && <div className="mb-4 text-sm text-muted-foreground">{task.note}</div>}
+          {task.note && (
+            <div className="mb-4 text-sm text-muted-foreground">
+              {task.note}
+            </div>
+          )}
 
           <div className="space-y-2">
             <h4 className="text-sm font-medium mb-2">チェックリスト</h4>
             {sortedTaskChecks.length === 0 ? (
-              <div className="text-sm text-muted-foreground">チェック項目がありません</div>
+              <div className="text-sm text-muted-foreground">
+                チェック項目がありません
+              </div>
             ) : (
               sortedTaskChecks.map((taskCheck) => {
                 const checkItem = getCheckItem(taskCheck.check_item_id)
@@ -130,14 +175,17 @@ export function TaskRow({ task, categoryName, isExpanded, onToggleExpand, taskCh
                   <div key={taskCheck.id} className="flex items-center gap-2">
                     <Checkbox
                       checked={taskCheck.is_done}
-                      onCheckedChange={() => handleCheckToggle(taskCheck.id, taskCheck.is_done)}
+                      onCheckedChange={() =>
+                        handleCheckToggle(taskCheck.id, taskCheck.is_done)
+                      }
                       id={`check-${taskCheck.id}`}
                     />
                     <label
                       htmlFor={`check-${taskCheck.id}`}
                       className={cn(
-                        "text-sm cursor-pointer",
-                        taskCheck.is_done && "line-through text-muted-foreground",
+                        'text-sm cursor-pointer',
+                        taskCheck.is_done &&
+                          'line-through text-muted-foreground'
                       )}
                     >
                       {checkItem.name}

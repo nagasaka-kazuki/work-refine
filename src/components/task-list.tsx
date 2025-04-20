@@ -1,8 +1,8 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { TaskRow } from "@/components/task-row"
+import { useState } from 'react'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { TaskRow } from '@/components/task-row'
 
 interface TaskListProps {
   tasks: any[]
@@ -12,8 +12,16 @@ interface TaskListProps {
   sortBy: string
 }
 
-export function TaskList({ tasks, categories, checkItems, taskChecks, sortBy }: TaskListProps) {
-  const [expandedTasks, setExpandedTasks] = useState<Record<string, boolean>>({})
+export function TaskList({
+  tasks,
+  categories,
+  checkItems,
+  taskChecks,
+  sortBy,
+}: TaskListProps) {
+  const [expandedTasks, setExpandedTasks] = useState<Record<string, boolean>>(
+    {}
+  )
 
   const toggleTaskExpanded = (taskId: string) => {
     setExpandedTasks((prev) => ({
@@ -24,13 +32,16 @@ export function TaskList({ tasks, categories, checkItems, taskChecks, sortBy }: 
 
   // Sort tasks based on sortBy
   const sortedTasks = [...tasks].sort((a, b) => {
-    if (sortBy === "due_to") {
+    if (sortBy === 'due_to') {
       if (!a.due_to) return 1
       if (!b.due_to) return -1
       return new Date(a.due_to).getTime() - new Date(b.due_to).getTime()
-    } else if (sortBy === "status") {
+    } else if (sortBy === 'status') {
       const statusOrder = { todo: 0, doing: 1, done: 2 }
-      return statusOrder[a.status] - statusOrder[b.status]
+      return (
+        statusOrder[a.status as keyof typeof statusOrder] -
+        statusOrder[b.status as keyof typeof statusOrder]
+      )
     } else {
       return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     }
@@ -39,7 +50,7 @@ export function TaskList({ tasks, categories, checkItems, taskChecks, sortBy }: 
   // Get category name by id
   const getCategoryName = (categoryId: string) => {
     const category = categories.find((c) => c.id === categoryId)
-    return category ? category.name : "不明"
+    return category ? category.name : '不明'
   }
 
   // Get task checks for a task

@@ -1,1 +1,35 @@
-[{"sql":["CREATE TYPE \"public\".\"task_status\" AS ENUM('todo', 'doing', 'done');","\nCREATE TABLE \"categories\" (\n\t\"id\" uuid PRIMARY KEY NOT NULL,\n\t\"name\" varchar(255) NOT NULL,\n\t\"created_at\" timestamp DEFAULT now(),\n\t\"updated_at\" timestamp DEFAULT now(),\n\tCONSTRAINT \"categories_name_unique\" UNIQUE(\"name\")\n);\n","\nCREATE TABLE \"check_items\" (\n\t\"id\" uuid PRIMARY KEY NOT NULL,\n\t\"category_id\" uuid NOT NULL,\n\t\"name\" varchar(255) NOT NULL,\n\t\"sort_position\" integer NOT NULL,\n\t\"created_at\" timestamp DEFAULT now(),\n\t\"updated_at\" timestamp DEFAULT now()\n);\n","\nCREATE TABLE \"task_checks\" (\n\t\"id\" uuid PRIMARY KEY NOT NULL,\n\t\"task_id\" uuid NOT NULL,\n\t\"check_item_id\" uuid NOT NULL,\n\t\"is_done\" boolean DEFAULT false NOT NULL,\n\t\"created_at\" timestamp DEFAULT now(),\n\t\"updated_at\" timestamp DEFAULT now()\n);\n","\nCREATE TABLE \"tasks\" (\n\t\"id\" uuid PRIMARY KEY NOT NULL,\n\t\"category_id\" uuid NOT NULL,\n\t\"name\" varchar(255) NOT NULL,\n\t\"status\" \"task_status\" NOT NULL,\n\t\"created_at\" timestamp DEFAULT now(),\n\t\"updated_at\" timestamp DEFAULT now()\n);\n","\nALTER TABLE \"check_items\" ADD CONSTRAINT \"check_items_category_id_categories_id_fk\" FOREIGN KEY (\"category_id\") REFERENCES \"public\".\"categories\"(\"id\") ON DELETE cascade ON UPDATE no action;","\nALTER TABLE \"task_checks\" ADD CONSTRAINT \"task_checks_task_id_tasks_id_fk\" FOREIGN KEY (\"task_id\") REFERENCES \"public\".\"tasks\"(\"id\") ON DELETE cascade ON UPDATE no action;","\nALTER TABLE \"task_checks\" ADD CONSTRAINT \"task_checks_check_item_id_check_items_id_fk\" FOREIGN KEY (\"check_item_id\") REFERENCES \"public\".\"check_items\"(\"id\") ON DELETE cascade ON UPDATE no action;","\nALTER TABLE \"tasks\" ADD CONSTRAINT \"tasks_category_id_categories_id_fk\" FOREIGN KEY (\"category_id\") REFERENCES \"public\".\"categories\"(\"id\") ON DELETE cascade ON UPDATE no action;"],"bps":true,"folderMillis":1745049828954,"hash":"9b1a6b664061da85f209c8e2df12bc10b232b095390ec74fdd572aaf4dda16c3"},{"sql":["ALTER TABLE \"task_checks\" ADD COLUMN \"sort_position\" integer NOT NULL;"],"bps":true,"folderMillis":1745072842089,"hash":"d3e939634c9bfa41296a6d1c79b5e27e37b654f475590071806bb5d2cf9f42da"},{"sql":["ALTER TABLE \"tasks\" ADD COLUMN \"note\" varchar(255);","\nALTER TABLE \"tasks\" ADD COLUMN \"due_to\" timestamp;"],"bps":true,"folderMillis":1745112683207,"hash":"a0a298a318697f600144ceb3e9937f1be4561840928e9cf5cfef529113941f64"}]
+[
+  {
+    "sql": [
+      "CREATE TYPE \"public\".\"task_status\" AS ENUM('todo', 'doing', 'done');",
+      "\nCREATE TABLE \"categories\" (\n\t\"id\" uuid PRIMARY KEY NOT NULL,\n\t\"name\" varchar(255) NOT NULL,\n\t\"created_at\" timestamp DEFAULT now(),\n\t\"updated_at\" timestamp DEFAULT now(),\n\tCONSTRAINT \"categories_name_unique\" UNIQUE(\"name\")\n);\n",
+      "\nCREATE TABLE \"check_items\" (\n\t\"id\" uuid PRIMARY KEY NOT NULL,\n\t\"category_id\" uuid NOT NULL,\n\t\"name\" varchar(255) NOT NULL,\n\t\"sort_position\" integer NOT NULL,\n\t\"created_at\" timestamp DEFAULT now(),\n\t\"updated_at\" timestamp DEFAULT now()\n);\n",
+      "\nCREATE TABLE \"task_checks\" (\n\t\"id\" uuid PRIMARY KEY NOT NULL,\n\t\"task_id\" uuid NOT NULL,\n\t\"check_item_id\" uuid NOT NULL,\n\t\"is_done\" boolean DEFAULT false NOT NULL,\n\t\"created_at\" timestamp DEFAULT now(),\n\t\"updated_at\" timestamp DEFAULT now()\n);\n",
+      "\nCREATE TABLE \"tasks\" (\n\t\"id\" uuid PRIMARY KEY NOT NULL,\n\t\"category_id\" uuid NOT NULL,\n\t\"name\" varchar(255) NOT NULL,\n\t\"status\" \"task_status\" NOT NULL,\n\t\"created_at\" timestamp DEFAULT now(),\n\t\"updated_at\" timestamp DEFAULT now()\n);\n",
+      "\nALTER TABLE \"check_items\" ADD CONSTRAINT \"check_items_category_id_categories_id_fk\" FOREIGN KEY (\"category_id\") REFERENCES \"public\".\"categories\"(\"id\") ON DELETE cascade ON UPDATE no action;",
+      "\nALTER TABLE \"task_checks\" ADD CONSTRAINT \"task_checks_task_id_tasks_id_fk\" FOREIGN KEY (\"task_id\") REFERENCES \"public\".\"tasks\"(\"id\") ON DELETE cascade ON UPDATE no action;",
+      "\nALTER TABLE \"task_checks\" ADD CONSTRAINT \"task_checks_check_item_id_check_items_id_fk\" FOREIGN KEY (\"check_item_id\") REFERENCES \"public\".\"check_items\"(\"id\") ON DELETE cascade ON UPDATE no action;",
+      "\nALTER TABLE \"tasks\" ADD CONSTRAINT \"tasks_category_id_categories_id_fk\" FOREIGN KEY (\"category_id\") REFERENCES \"public\".\"categories\"(\"id\") ON DELETE cascade ON UPDATE no action;"
+    ],
+    "bps": true,
+    "folderMillis": 1745049828954,
+    "hash": "9b1a6b664061da85f209c8e2df12bc10b232b095390ec74fdd572aaf4dda16c3"
+  },
+  {
+    "sql": [
+      "ALTER TABLE \"task_checks\" ADD COLUMN \"sort_position\" integer NOT NULL;"
+    ],
+    "bps": true,
+    "folderMillis": 1745072842089,
+    "hash": "d3e939634c9bfa41296a6d1c79b5e27e37b654f475590071806bb5d2cf9f42da"
+  },
+  {
+    "sql": [
+      "ALTER TABLE \"tasks\" ADD COLUMN \"note\" varchar(255);",
+      "\nALTER TABLE \"tasks\" ADD COLUMN \"due_to\" timestamp;"
+    ],
+    "bps": true,
+    "folderMillis": 1745112683207,
+    "hash": "a0a298a318697f600144ceb3e9937f1be4561840928e9cf5cfef529113941f64"
+  }
+]

@@ -17,15 +17,14 @@ db.select()
     console.log(data.map((item) => item.name))
   })
 
-  console.log(db.select()
-  .from(categories).toSQL())
+console.log(db.select().from(categories).toSQL())
 
-      const [cats, tsks, chkItems, chkTs] = await Promise.all([
-        db.select().from(categories),
-        db.select().from(tasks),
-        db.select().from(check_items),
-        db.select().from(task_checks),
-      ])
+const [cats, tsks, chkItems, chkTs] = await Promise.all([
+  db.select().from(categories),
+  db.select().from(tasks),
+  db.select().from(check_items),
+  db.select().from(task_checks),
+])
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
