@@ -87,7 +87,7 @@ export function TaskModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent >
         <DialogHeader>
           <DialogTitle>タスク追加</DialogTitle>
         </DialogHeader>

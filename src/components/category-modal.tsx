@@ -97,7 +97,7 @@ export function CategoryModal({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>
               {category ? 'カテゴリ編集' : 'カテゴリ追加'}

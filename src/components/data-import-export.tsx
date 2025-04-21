@@ -86,11 +86,11 @@ export function DataImportExport() {
       </div>
 
       <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent >
           <DialogHeader>
             <DialogTitle>データのインポート</DialogTitle>
             <DialogDescription>
-              エクスポートしたJSONファイルを選択してください。現在のデータは一致しないもののみ追加されます。
+              エクスポートしたJSONファイルを選択してください。現在のデータと一致しないもののみ追加されます。
             </DialogDescription>
           </DialogHeader>
 
