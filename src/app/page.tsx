@@ -6,7 +6,7 @@ import { Sidebar } from '@/components/sidebar'
 import { TopBar } from '@/components/top-bar'
 import { CategoryModal } from '@/components/category-modal'
 import { TaskModal } from '@/components/task-modal'
-import { categories, Category, Task, CheckItem, TaskCheck } from '@/db/schema'
+import type { Category, Task, CheckItem, TaskCheck } from '@/db/schema'
 import { CategoryRepository } from '@/lib/repositories/categories'
 import { TaskRepository } from '@/lib/repositories/tasks'
 import { useLiveSync } from '@/hooks/use-live-sync'
@@ -30,9 +30,8 @@ export default function Home({
   )
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false)
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
-  const [editingCategory, setEditingCategory] = useState<
-    typeof categories.$inferSelect | null
-  >(null)
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null)
+  const [editingTask, setEditingTask] = useState<Task | null>(null)
   const { allCategories, allTasks, allCheckItems, allTaskChecks } = useLiveSync(
     categoriesData,
     tasksData,
@@ -51,6 +50,12 @@ export default function Home({
   }
 
   const handleAddTask = () => {
+    setEditingTask(null)
+    setIsTaskModalOpen(true)
+  }
+
+  const handleEditTask = (task: any) => {
+    setEditingTask(task)
     setIsTaskModalOpen(true)
   }
 
@@ -87,10 +92,29 @@ export default function Home({
 
   const handleSaveTask = async (taskData: any) => {
     try {
-      await TaskRepository.createWithChecks(taskData)
+      if (editingTask) {
+        // 既存タスクの更新
+        await TaskRepository.update(editingTask.id, {
+          name: taskData.name,
+          note: taskData.note,
+          due_to: taskData.due_to,
+        })
+      } else {
+        // 新規タスクの作成
+        await TaskRepository.createWithChecks(taskData)
+      }
       setIsTaskModalOpen(false)
     } catch (error) {
       console.error('Error saving task:', error)
+    }
+  }
+
+  const handleDeleteTask = async (taskId: string) => {
+    try {
+      await TaskRepository.delete(taskId)
+      setIsTaskModalOpen(false)
+    } catch (error) {
+      console.error('Error deleting task:', error)
     }
   }
 
@@ -130,6 +154,7 @@ export default function Home({
             taskChecks={allTaskChecks}
             sortBy={sortBy}
             getTaskStatus={getTaskStatus}
+            onEditTask={handleEditTask}
           />
         </main>
       </div>
@@ -151,7 +176,9 @@ export default function Home({
         isOpen={isTaskModalOpen}
         onClose={() => setIsTaskModalOpen(false)}
         onSave={handleSaveTask}
+        onDelete={handleDeleteTask}
         categories={allCategories}
+        task={editingTask}
       />
     </div>
   )

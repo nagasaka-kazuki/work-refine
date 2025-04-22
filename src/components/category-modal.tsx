@@ -79,8 +79,14 @@ export function CategoryModal({
 
   const handleDelete = () => {
     if (category && onDelete) {
-      onDelete(category.id)
-      onClose()
+      if (
+        confirm(
+          'このカテゴリーを削除してもよいですか？カテゴリーに紐づくタスクも消去されます。'
+        )
+      ) {
+        onDelete(category.id)
+        onClose()
+      }
     }
   }
 

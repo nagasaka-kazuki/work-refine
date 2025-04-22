@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { TaskRow } from '@/components/task-row'
+import { Task } from '@/db/schema'
 
 interface TaskListProps {
   tasks: any[]
@@ -11,6 +12,7 @@ interface TaskListProps {
   taskChecks: any[]
   sortBy: string
   getTaskStatus: (taskId: string) => 'todo' | 'doing' | 'done'
+  onEditTask: (task: Task) => void
 }
 
 export function TaskList({
@@ -20,6 +22,7 @@ export function TaskList({
   taskChecks,
   sortBy,
   getTaskStatus,
+  onEditTask,
 }: TaskListProps) {
   const [expandedTasks, setExpandedTasks] = useState<Record<string, boolean>>(
     {}
@@ -81,6 +84,7 @@ export function TaskList({
               onToggleExpand={() => toggleTaskExpanded(task.id)}
               taskChecks={getTaskChecks(task.id)}
               getCheckItem={getCheckItem}
+              onEditTask={onEditTask}
             />
           ))
         )}

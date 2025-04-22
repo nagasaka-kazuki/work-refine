@@ -28,7 +28,6 @@ export function useLiveSync(
   const subsRef = useRef<Array<() => Promise<void>>>([])
 
   useEffect(() => {
-
     const setup = async () => {
       if (subsRef.current.length > 0) {
         await Promise.all(subsRef.current.map((unsub) => unsub()))

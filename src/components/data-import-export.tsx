@@ -86,7 +86,7 @@ export function DataImportExport() {
       </div>
 
       <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
-        <DialogContent >
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>データのインポート</DialogTitle>
             <DialogDescription>

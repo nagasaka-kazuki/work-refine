@@ -1,3 +1,5 @@
+'use client'
+
 import { useState, useEffect } from 'react'
 import {
   Dialog,
@@ -17,19 +19,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Category, Task } from '@/db/schema'
+import { Trash2 } from 'lucide-react'
 
 interface TaskModalProps {
   isOpen: boolean
   onClose: () => void
   onSave: (task: any) => void
-  categories: any[]
+  onDelete?: (taskId: string) => void // 追加
+  categories: Category[]
+  task: Task | null // 追加: 編集時に渡されるタスク
 }
 
 export function TaskModal({
   isOpen,
   onClose,
   onSave,
+  onDelete,
   categories,
+  task,
 }: TaskModalProps) {
   // ローカル日時を "YYYY-MM-DDThh:mm" 形式で取得
   const getLocalDatetime = () => {
@@ -60,9 +68,31 @@ export function TaskModal({
   // モーダルが開かれたときにフォーム初期化
   useEffect(() => {
     if (isOpen) {
-      resetForm()
+      if (task) {
+        // 編集モード: 既存のタスクデータをセット
+        setName(task.name || '')
+        setCategoryId(task.category_id || '')
+        setNote(task.note || '')
+
+        // due_to が存在する場合、ローカルのdatetime-local形式に変換
+        if (task.due_to) {
+          const date = new Date(task.due_to)
+          const pad = (n: number) => n.toString().padStart(2, '0')
+          const year = date.getFullYear()
+          const month = pad(date.getMonth() + 1)
+          const day = pad(date.getDate())
+          const hours = pad(date.getHours())
+          const minutes = pad(date.getMinutes())
+          setDueTo(`${year}-${month}-${day}T${hours}:${minutes}`)
+        } else {
+          setDueTo(getLocalDatetime())
+        }
+      } else {
+        // 新規作成モード: フォームをリセット
+        resetForm()
+      }
     }
-  }, [isOpen])
+  }, [isOpen, task])
 
   const handleClose = () => {
     resetForm()
@@ -75,6 +105,7 @@ export function TaskModal({
     const dueToDate = dueTo ? new Date(dueTo) : null
 
     onSave({
+      id: task?.id, // 編集時はIDを渡す
       name,
       category_id: categoryId,
       note,
@@ -87,9 +118,9 @@ export function TaskModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-      <DialogContent >
+      <DialogContent>
         <DialogHeader>
-          <DialogTitle>タスク追加</DialogTitle>
+          <DialogTitle>{task ? 'タスク編集' : 'タスク追加'}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
@@ -141,13 +172,28 @@ export function TaskModal({
           </div>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={handleClose}>
-            キャンセル
-          </Button>
-          <Button onClick={handleSave} disabled={!name.trim() || !categoryId}>
-            保存
-          </Button>
+        <DialogFooter className="flex items-center justify-between">
+          {task && onDelete && (
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (confirm('このタスクを削除してもよろしいですか？')) {
+                  onDelete(task.id)
+                }
+              }}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              削除
+            </Button>
+          )}
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleClose}>
+              キャンセル
+            </Button>
+            <Button onClick={handleSave} disabled={!name.trim() || !categoryId}>
+              保存
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
