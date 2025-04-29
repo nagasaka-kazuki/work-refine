@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/select'
 import { Category, Task } from '@/db/schema'
 import { Trash2 } from 'lucide-react'
+import { DialogDescription } from '@radix-ui/react-dialog'
 
 interface TaskModalProps {
   isOpen: boolean
@@ -119,6 +120,9 @@ export function TaskModal({
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent>
+        <DialogDescription className="sr-only">
+          タスクの追加・編集を行うダイアログ
+        </DialogDescription>
         <DialogHeader>
           <DialogTitle>{task ? 'タスク編集' : 'タスク追加'}</DialogTitle>
         </DialogHeader>
