@@ -61,9 +61,9 @@ async function runMigrationIfNeeded(dbInstance: any) {
 
 async function initAndRender() {
   // 必要ならマイグレーション実行
-  console.time("migration");
+  console.time("db setup");
   await runMigrationIfNeeded(db);
-  console.timeEnd("migration");
+  console.timeEnd("db setup");
 
   // データ取得
   const [cats, tsks, chkItems, chkTs] = await Promise.all([
