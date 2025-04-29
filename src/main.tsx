@@ -18,60 +18,59 @@ import { Toaster } from 'sonner'
 
 const root = createRoot(document.getElementById('root')!)
 
-const MIGRATION_HASH_KEY = "drizzle_migration_hash";
+const MIGRATION_HASH_KEY = 'drizzle_migration_hash'
 
 // 最新のマイグレーションハッシュを取得
 function getLatestMigrationHash() {
   if (!Array.isArray(migrations) || migrations.length === 0) {
-    return null;
+    return null
   }
-  return migrations[migrations.length - 1].hash;
+  return migrations[migrations.length - 1].hash
 }
 
 // ローカルストレージのハッシュと比較して、マイグレーションが必要かどうか
 function isMigrationNeeded(): boolean {
-  const latest = getLatestMigrationHash();
+  const latest = getLatestMigrationHash()
   const saved =
-    typeof window !== "undefined"
+    typeof window !== 'undefined'
       ? window.localStorage.getItem(MIGRATION_HASH_KEY)
-      : null;
-  return latest !== null && latest !== saved;
+      : null
+  return latest !== null && latest !== saved
 }
 
 // マイグレーション実行＆ハッシュ保存
 async function runMigrationIfNeeded(dbInstance: any) {
-  const latest = getLatestMigrationHash();
-  if (!latest) return;
+  const latest = getLatestMigrationHash()
+  if (!latest) return
 
   if (!isMigrationNeeded()) {
-    console.log("[migrate] skip, hash matches:", latest);
-    return;
+    console.log('[migrate] skip, hash matches:', latest)
+    return
   }
 
-  console.log("[migrate] running migrations…");
+  console.log('[migrate] running migrations…')
   await dbInstance.dialect.migrate(migrations, (dbInstance as any).session, {
-    migrationsTable: "drizzle_migrations",
-  });
+    migrationsTable: 'drizzle_migrations',
+  })
 
   // 成功したらローカルストレージに最新ハッシュを保存
-  window.localStorage.setItem(MIGRATION_HASH_KEY, latest);
-  console.log("[migrate] done, saved hash:", latest);
+  window.localStorage.setItem(MIGRATION_HASH_KEY, latest)
+  console.log('[migrate] done, saved hash:', latest)
 }
-
 
 async function initAndRender() {
   // 必要ならマイグレーション実行
-  console.time("db setup");
-  await runMigrationIfNeeded(db);
-  console.timeEnd("db setup");
+  console.time('db setup')
+  await runMigrationIfNeeded(db)
+  console.timeEnd('db setup')
 
   // データ取得
-  const [cats, tsks, chkItems, chkTs] = await Promise.all([
+  const [cats, tsks, chkItems, chkTs] = (await Promise.all([
     db.select().from(categories),
     db.select().from(tasks),
     db.select().from(check_items),
     db.select().from(task_checks),
-  ]) as [Category[], Task[], CheckItem[], TaskCheck[]];
+  ])) as [Category[], Task[], CheckItem[], TaskCheck[]]
 
   // レンダリング
   root.render(
@@ -84,7 +83,7 @@ async function initAndRender() {
       />
       <Toaster />
     </StrictMode>
-  );
+  )
 }
 
 initAndRender()
